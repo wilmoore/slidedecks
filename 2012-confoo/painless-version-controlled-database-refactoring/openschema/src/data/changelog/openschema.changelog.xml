@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+  xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+         http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-2.0.xsd">
+
+    <changeSet id="20111117-0831__create_party" author="wilmoore">
+        <comment>create the party table</comment>
+        <createTable tableName="party">
+            <column name="partyId" type="SERIAL" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false" />
+            </column>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="20111117-0832__create_organization" author="wilmoore">
+        <comment>create the organization table</comment>
+
+        <createTable tableName="organization">
+            <column name="partyId" type="BIGINT UNSIGNED">
+                <constraints nullable="false" />
+            </column>
+        </createTable>
+
+        <addForeignKeyConstraint
+            constraintName="fk___organization_partyId__party__partyId"
+            baseTableName="organization"
+            baseColumnNames="partyId"
+            referencedTableName="party"
+            referencedColumnNames="partyId"
+        />
+    </changeSet>
+
+    <changeset id="20111117-0832__seed-party-organization" context="seed" author="wilmoore">
+      <sql>
+      -- seed party and organization tables
+      INSERT INTO `party` (`partyId`) VALUES (1);
+      INSERT INTO `organization` (`partyId`) VALUES (1);
+      </sql>
+    </changeset>
+
+    <changeSet id="20111117-0835__create_person" author="wilmoore">
+        <comment>create the person table</comment>
+
+        <sql>
+        CREATE TABLE IF NOT EXISTS `person` (
+        `partyId`   BIGINT(20) UNSIGNED NOT NULL,
+
+        KEY `fk___person_partyId__party__partyId` (`partyId`),
+        CONSTRAINT `fk___person_partyId__party__partyId`
+            FOREIGN KEY (`partyId`)
+            REFERENCES `party` (`partyId`)
+        ) ENGINE=INNODB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
+        </sql>
+
+        <rollback>
+            <sql>DROP TABLE `person`;</sql>
+        </rollback>
+    </changeSet>
+
+</databaseChangeLog>

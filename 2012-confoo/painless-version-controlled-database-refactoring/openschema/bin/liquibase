@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+LB_CLASS_PATH=$(dirname $0)/liquibase.jar:$(dirname $0)/mysql-connector-java-5.1.18-bin.jar
+LIQUIBASE_CMD=liquibase.integration.commandline.Main
+java -cp ${LB_CLASS_PATH} ${LIQUIBASE_CMD} \
+  --driver="com.mysql.jdbc.Driver" \
+  --url="jdbc:mysql://localhost/openschema" \
+  --username=root \
+  --password=rootpass \
+  --changeLogFile=src/data/changelog/openschema.changelog.xml \
+"$@"

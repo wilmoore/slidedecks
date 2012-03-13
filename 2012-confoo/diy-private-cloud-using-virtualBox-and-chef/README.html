@@ -1,0 +1,84 @@
+<h1 id="diy-private-cloud-...-using-virtualbox-and-chef">DIY Private Cloud ... using VirtualBox and Chef</h1>
+<h2 id="introduction-about-me">Introduction + About Me</h2>
+<p>Hello, my name is Wil Moore III</p>
+<p>I work for a US-based company by the name of Net-Results. Our main product is a marketing automation platform.</p>
+<p>We are located in Denver, Colorado.</p>
+<p></p>
+<h2 id="a-toolkit-for-infrastructural-automation">A TOOLKIT for infrastructural AUTOMATION</h2>
+<p><em>*</em> THE BACKSTORY <em>*</em></p>
+<p>About a year ago, I worked for a company in the HealthCare industry.</p>
+<p>We were dealing with HIPAA, SOX, etc., etc.</p>
+<p>Amazon Web Services looked attractive but we couldn't get approval.</p>
+<p>Because we were unable to utilize the public cloud, we had to attempt to achive our scalability and elasticity within our own firewall.</p>
+<p>We also wanted the freedom to experiment with new technologies and be able to throw things away at will.</p>
+<p>Another major goal was to be able to understand a year later why we made certain infrastructural decision. Everything needed to be self-documenting and we needed an audit trail.</p>
+<h2 id="high-quality-free-components-everywhere">High Quality Free Components Everywhere</h2>
+<p>My experience has been that open-source tools are <em>generally</em> higher quality than their non-open equivalents.</p>
+<p>Open generally means less BS and more bug fixes.</p>
+<p>Security holes get reported and corrected quicker.</p>
+<h2 id="no-silver-bullet">No silver bullet</h2>
+<ul>
+<li><p>there is no one size fits-all model</p></li>
+<li><p>your infrastructure and available resources are unique</p></li>
+</ul>
+<h2 id="why-virtualbox">WHY VIRTUALBOX?</h2>
+<ul>
+<li><p>We started w/ Virtualbox because we had just switched over from VMWare for our local development.</p></li>
+<li><p>I started prototyping and it turns out that Virtualbox is quite up the the task of allowing a smooth automation path.</p></li>
+<li><p>Don't cargo-cult when you hear something isn't fast or doesn't scale. It may suit you just fine.</p></li>
+<li><p>It's Available for Windows, Mac, and Linux.</p></li>
+<li><p>It supports a bunch of image formats out of the box.</p></li>
+</ul>
+<p>That being said, don't let me force you into using Virtualbox. XEN and KVM are rediculously good and could actually be a better choice once you understand how it all works.</p>
+<h2 id="keys-to-automation">KEYS to AUTOMATION</h2>
+<ul>
+<li><p>Going forward we will look at several ways to automate critical pieces of the puzzle.</p></li>
+<li><p>The goal is to hand you the keys so you can go back to your organization and drive your own automation effort.</p></li>
+</ul>
+<h2 id="latest-version-please">LATEST VERSION PLEASE?</h2>
+<ul>
+<li><p>You want to automate as much as possible...even the host machine installations.</p></li>
+<li><p>Script your VM software install so it becomes painless. Do this on your host machines as well as your development machines.</p></li>
+<li><p>In order to be lazy, you have to prepare for it.</p></li>
+</ul>
+<h2 id="choose-an-apiinterface">Choose an API/interface</h2>
+<ul>
+<li><p>There are several options, but let me save you some time. The CLI interface works well and is available cross-platform.</p></li>
+<li><p>But if you like XML, COM, or XPCOM, I won't stop you.</p></li>
+</ul>
+<h2 id="vboxmanage-sub-commands">VboxManage sub-commands</h2>
+<ul>
+<li><p>Remotely control the instance.</p></li>
+<li><p>Create VM images, start, stop, pause instances.</p></li>
+<li><p>Clone Images, set metadata on an instance, or pull metrics.</p></li>
+</ul>
+<h2 id="cooking-with-chef">Cooking with Chef</h2>
+<ul>
+<li>Allows you to compose your infrastructure as code</li>
+<li>Chef is all about /he cookbook</li>
+<li>Cookbooks have recipes</li>
+<li>Recipes have files, templates, and more</li>
+<li>Run-Lists determine recipes to install</li>
+</ul>
+<h2 id="running-chef-until-we">Running Chef until we</h2>
+<ul>
+<li><p>sudo chef-solo -c provisioners/chef/bin/solo.rb # Based on error, we need to create a cookbook</p></li>
+<li>sudo chef-solo -c provisioners/chef/bin/solo.rb</li>
+<li><p>No more errors; however, notice &quot;Run List expands to []&quot; # We need to add a run list</p></li>
+<li><p>A run list is a manifest of which recipes to install</p></li>
+</ul>
+<h2 id="want-a-green-environment">Want a green environment</h2>
+<ul>
+<li><p>In order to have a stand-by ready, but powered-down, you'll want to use a Network Power Switch.</p></li>
+<li><p>They are meant to be contolled remotely; however, this can also be automated.</p></li>
+</ul>
+<h2 id="use-only-what-you-need">Use ONLY what you need!</h2>
+<ul>
+<li><p>deploy only the hardware that is needed</p></li>
+<li><p>preallocate a fraction of what you are using as stand-by</p></li>
+</ul>
+<p>NOTES:</p>
+<ul>
+<li><p>there is no one-size-fits-all solution to figuring out how many stand-bys to use; however, mine is simple so you can start there and modify as necessary.</p></li>
+<li><p>in all honesty, I generally feel safer with AT LEAST 2 stand-bys as a bare minimum.</p></li>
+</ul>
