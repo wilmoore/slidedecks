@@ -1,0 +1,629 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>10 advanced, yet digestible SSH techniques</title>
+        <meta name="author" content="Wil Moore III" />
+        <meta name="email" content="wil.moore@wilmoore.com" />
+        <meta name="date" content="2012-05-13" />
+        <meta name="venue" content="DOSUG" />
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+        <!-- Slippy core file and dependencies -->
+        <script type="text/javascript" src="jquery.min.js"></script>
+        <script type="text/javascript" src="jquery.history.js"></script>
+        <script type="text/javascript" src="slippy.js"></script>
+        <!-- Slippy structural styles -->
+        <link type="text/css" rel="stylesheet" href="slippy.css"/>
+        <!-- Slippy theme -->
+        <link type="text/css" rel="stylesheet" href="slippy-pure.css"/>
+        <!-- Syntax highlighting core file  -->
+        <script type="text/javascript" src="highlighter/shCore.js"></script>
+        <!-- Syntax highlighting brushes, remove those you don't need -->
+        <script type="text/javascript" src="highlighter/shBrushBash.js"></script>
+        <script type="text/javascript" src="highlighter/shBrushCpp.js"></script>
+        <script type="text/javascript" src="highlighter/shBrushCSharp.js"></script>
+        <script type="text/javascript" src="highlighter/shBrushCss.js"></script>
+        <script type="text/javascript" src="highlighter/shBrushDelphi.js"></script>
+        <script type="text/javascript" src="highlighter/shBrushDiff.js"></script>
+        <script type="text/javascript" src="highlighter/shBrushGroovy.js"></script>
+        <script type="text/javascript" src="highlighter/shBrushJava.js"></script>
+        <script type="text/javascript" src="highlighter/shBrushJScript.js"></script>
+        <script type="text/javascript" src="highlighter/shBrushPhp.js"></script>
+        <script type="text/javascript" src="highlighter/shBrushPlain.js"></script>
+        <script type="text/javascript" src="highlighter/shBrushPython.js"></script>
+        <script type="text/javascript" src="highlighter/shBrushRuby.js"></script>
+        <script type="text/javascript" src="highlighter/shBrushScala.js"></script>
+        <script type="text/javascript" src="highlighter/shBrushSql.js"></script>
+        <script type="text/javascript" src="highlighter/shBrushVb.js"></script>
+        <script type="text/javascript" src="highlighter/shBrushXml.js"></script>
+        <!-- Syntax highlighting styles-->
+        <link type="text/css" rel="stylesheet" href="highlighter/shCore.css"/>
+        <link type="text/css" rel="stylesheet" href="highlighter/shThemeMidnight.css"/>
+        <!-- Slippy init code -->
+        <script type="text/javascript">
+            $(function() {
+                SyntaxHighlighter.all();
+                $(".slide").slippy({
+                    animLen: 0
+                });
+            });
+        </script>
+        <style type="text/css">
+            body {
+                background: #fff;
+                background-color:#ffffff;
+                background-image: -moz-radial-gradient(50% 50%, ellipse closest-side, #ffffff, #ccc 100%);
+                background-image: -webkit-radial-gradient(50% 50%, ellipse closest-side, #ffffff, #ccc 100%);
+                background-image: -o-radial-gradient(50% 50%, ellipse closest-side, #ffffff, #ccc 100%);
+                background-image: -ms-radial-gradient(50% 50%, ellipse closest-side, #ffffff, #ccc 100%);
+                background-image: radial-gradient(50% 50%, ellipse closest-side, #ffffff, #ccc 100%);
+            }
+            div.syntaxhighlighter {
+                background: #aaa !important;
+            }
+            .alertWrapper {
+                top: 5%;
+                bottom: auto;
+            }
+            .footer {
+                margin-bottom: 0px;
+            }
+            #background, body.slide-1 .slideDisplay {
+                display: none;
+            }
+            .slideDisplay {
+                color: #666;
+            }
+            a, a:link {
+                text-decoration: none;
+            }
+            h1 {
+                line-height: 130%;
+            }
+            ul li {
+                line-height: 130%;
+            }
+            p {
+                margin-bottom: .7em;
+            }
+            .center {
+                text-align: center;
+            }
+            .slide em {
+                color: #b00;
+            }
+            .slide.showtime:after {
+                content: "Showtime";
+                display: block;
+                text-align: center;
+                position: relative;
+                bottom: 3em;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="slide big">
+            <div class="vcenter">
+                <h1>10 <em>advanced</em>, yet digestible <em><br />SSH techniques</em></h1>
+            </div>
+        </div>
+
+        <div class="slide big">
+            <h1>About Me</h1>
+
+<hr>
+<center>
+            <p>&nbsp;</p>
+            <p>Senior Developer @ Net-Results Marketing Automation<br /> &nbsp;<a href="http://net-results.com">http://net-results.com</a><br /> &nbsp;</p>
+            <p>Golden / Lakewood<br /> &nbsp;</p>
+</center>
+        </div>
+
+        <!-- ================================
+             Refresher
+             ================================  -->
+
+        <div class="slide big">
+            <div class="vcenter">
+                <h1>Quick Public/Private Key Refresher</h1>
+            </div>
+        </div>
+
+        <div class="slide big">
+            <div class="">
+                <h1><em>(Refresher)</em><br> Key Generation Style</h1>
+                <hr>
+                <p>Create multiple key pairs -- No more $HOME/.ssh/id_rsa</p>
+                <pre class="brush: bash">
+                ssh-keygen -t rsa \
+                  -C "{USER}@{APP} ({ENV})" \
+                  -f ~/.ssh/app-user-env.rsa
+                </pre>
+
+                <hr>
+                <p>Don't share across networks</p>
+                <pre class="brush: bash">
+                ssh-keygen -t rsa \
+                  -C "deploy@uworkremote (ci)" \
+                  -f ~/.ssh/uworkremote-deploy-ci.rsa
+                </pre>
+            </div>
+        </div>
+
+        <div class="slide big">
+            <div class="">
+                <h1><em>(Refresher)</em><br> Share only your public key</h1>
+                <hr>
+                <p>Never share your "Private Key"</p>
+                <pre class="brush: bash">
+                ~/.ssh/uworkremote-deploy-ci.rsa
+                </pre>
+
+                <hr>
+                <p>Do share your "Public Key" with hosts you trust</p>
+                <pre class="brush: bash">
+                ~/.ssh/uworkremote-deploy-ci.rsa.pub
+                </pre>
+
+                <hr>
+                <p>Remote login: You'll be asked for your passphrase</p>
+                <pre class="brush: bash">
+                % ssh user@host -i \
+                  ~/.ssh/uworkremote-deploy-ci.rsa
+                </pre>
+            </div>
+        </div>
+
+        <div class="slide big">
+            <div class="">
+                <h1>Github <em>&hearts;</em>s Keys</h1>
+                <hr>
+                <p>Copy...Paste</p>
+                <img src="images/github-add-sshkey.png" />
+
+                <p>Github <em>Oauth2</em> API</p>
+                <pre class="brush: bash">
+                % curl -i 
+                  -H "Authorization: token ${token}" \
+                  -d '{"title": "${key-name}", \
+                       "key"  : "ssh-rsa ..."}' \
+                  https://api.github.com/user/keys
+                </pre>
+            </div>
+        </div>
+
+        <div class="slide big">
+            <div class="">
+                <h1>SSH Agent</h1>
+                <hr>
+                <p>Mac Keychain</p>
+                <img src="images/sshagent-keychain.png" />
+
+                <hr>
+                <p>Set and Forget</p>
+                <pre class="brush: bash">
+                % ssh-add -K \
+                  $HOME/.ssh/uworkremote-deploy-ci.rsa
+                </pre>
+            </div>
+        </div>
+
+        <!-- ================================
+             (01)
+             ================================  -->
+
+        <div class="slide big">
+          <h1 class="vcenter">
+            <em>-- (01) --</em>
+            <p>Change your private-key's pass-phrase</p>
+          </h1>
+        </div>
+
+        <div class="slide big">
+            <div class="">
+                <h1><em>Periodic</em> Pass-Phrase Change</h1>
+                <hr>
+                <pre class="brush: bash">
+                % ssh-keygen -p -f \
+                  $HOME/.ssh/uworkremote-deploy-ci.rsa
+
+                Enter old passphrase: 
+                Enter new passphrase: 
+                Enter same passphrase again: 
+
+                Your new passphrase has been saved...
+                </pre>
+            </div>
+        </div>
+
+        <!-- ================================
+             (02) 
+             ================================  -->
+
+        <div class="slide big">
+          <h1 class="vcenter">
+            <em>-- (02) --</em>
+            <p>Multiple Single-Use Keys</p>
+          </h1>
+        </div>
+
+        <div class="slide big">
+            <div class="">
+                <h1>Multiple <em>Single-Use Keys</em></h1>
+                <hr>
+                <p>You'll hate doing this:</p>
+                <pre class="brush: bash">
+                % ssh deploy@192.168.56.101 -p 3333...
+                </pre>
+
+                <hr>
+                <pre class="brush: bash">
+                % $EDITOR $HOME/.ssh/config
+
+                Host some-remote-host
+                  Hostname     192.168.56.101
+                  User         deploy
+                  Port         3333
+                  IdentityFile ~/.ssh/{keyname}.rsa
+                </pre>
+
+                <hr>
+                <p>You'll <em>&hearts;</em> doing this:</p>
+                <pre class="brush: bash">
+                % ssh some-remote-host
+                </pre>
+            </div>
+        </div>
+
+        <!-- ================================
+             (03) 
+             ================================  -->
+
+        <div class="slide big">
+          <h1 class="vcenter">
+            <em>-- (03) --</em>
+            <p>Remove <em>stale known_hosts</em> entries</p>
+          </h1>
+        </div>
+
+        <div class="slide big">
+            <div class="">
+                <h1>Remove <em>stale host</em> entries</h1>
+                <hr>
+                <img src="images/ssh-dns-spoof.png" />
+
+                <hr>
+                <h2>No <em>sed, awk, grep</em> tricks</h2>
+                <pre class="brush: bash">
+                % ssh-keygen -R 192.168.56.101
+                </pre>
+            </div>
+        </div>
+
+        <!-- ================================
+             (04) 
+             ================================  -->
+
+        <div class="slide big">
+          <h1 class="vcenter">
+            <em>-- (04) --</em>
+            <p>Hostname <em>Auto-Completion</em></p>
+          </h1>
+        </div>
+
+        <div class="slide big">
+            <div class="">
+                <h1><em>Auto-Completion</em> Hostnames</h1>
+                <hr>
+                <p>Type a few characters...press tab</p>
+                <pre class="brush: bash">
+                % ssh ec2
+                </pre>
+
+                <hr>
+                <p>List filtered based on input before pressing &lt;TAB&gt;</p>
+                <pre class="brush: bash">
+                ec2-184-72-73-71.compute-1.amazonaws.com
+                ec2-184-72-73-72.compute-1.amazonaws.com
+                ec2-184-72-73-73.compute-1.amazonaws.com
+                </pre>
+            </div>
+        </div>
+
+        <div class="slide big">
+            <div class="">
+                <h1>Remote Filename Auto-Complete</h1>
+                <hr>
+                <p>Type a path prefix...&lt;tab&gt;</p>
+                <pre class="brush: bash">
+                % scp devwork:/usr/local/k
+                </pre>
+
+                <hr>
+                <p>The `kestrel` directory is expanded...&lt;tab&gt; again</p>
+                <pre class="brush: bash">
+                % scp devwork:/usr/local/kestrel/
+                </pre>
+
+                <hr>
+                <p>Directory contents are expanded</p>
+                <pre class="brush: bash">
+                /usr/local/kestrel/config/
+                /usr/local/kestrel/scripts/
+                /usr/local/kestrel/kestrel-2.1.4.jar
+                /usr/local/kestrel/libs/
+                </pre>
+            </div>
+        </div>
+
+        <div class="slide big">
+            <div class="">
+                <h1>Is <em>Bash Completion</em> Installed?</h1>
+                <hr>
+                <p>You probably already have it installed</p>
+                <pre class="brush: bash">
+                % complete | grep [s]sh
+                </pre>
+
+                <pre class="brush: bash">
+                complete -F _ssh ssh
+                complete -F _ssh_copy_id ssh-copy-id
+                complete -o nospace -F _sshfs sshfs
+                complete -F _known_hosts ssh-installkeys
+                complete -F _ssh autossh
+                complete -F _ssh slogin
+                </pre>
+
+                <hr>
+                <p>If not, install it (if you have ZSH, skip this)</p>
+                <pre class="brush: bash">
+                ${YOUR_PACKAGER} install bash-completion
+                </pre>
+            </div>
+        </div>
+
+        <div class="slide big">
+            <div class="">
+                <h1>Use the script Luke...</h1>
+                <hr>
+                <p>Source it in</p>
+                <pre class="brush: bash">
+                % source /opt/local/etc/bash_completion
+                </pre>
+
+                <p>The homebrew version</p>
+                <pre class="brush: bash">
+                % source \
+                  $(brew --prefix)/etc/bash_completion
+                </pre>
+            </div>
+        </div>
+
+        <!-- ================================
+             (05) 
+             ================================  -->
+
+        <div class="slide big">
+          <h1 class="vcenter">
+            <em>-- (05) --</em>
+            <p>SSHFS</p>
+          </h1>
+        </div>
+
+        <div class="slide big">
+            <div class="">
+                <h1><em>Mount</em> remote directory over SSH</h1>
+                <hr>
+                <p>Mount</p>
+                <pre class="brush: bash">
+                % mkdir -p /tmp/devwww
+                % sshfs devwork:/var/www /tmp/devwww \
+                  -oreconnect,allow_other,volname=devwww
+                </pre>
+
+                <hr>
+                <p>Unmount</p>
+                <pre class="brush: bash">
+                % umount /tmp/devwww
+                </pre>
+
+                <hr>
+                <p>Thousands of files?</p>
+                <pre class="brush: bash">
+                % ls -1
+                % find . -maxdepth 1
+                </pre>
+            </div>
+        </div>
+
+        <!-- ================================
+             (06) 
+             ================================  -->
+
+        <div class="slide big">
+          <h1 class="vcenter">
+            <em>-- (06) --</em>
+            <p>Remote Commands</p>
+          </h1>
+        </div>
+
+        <div class="slide big">
+            <div class="">
+                <h1><em>Running</em> remote commands</h1>
+                <hr>
+                <p>Tailing a remote logfile</p>
+                <pre class="brush: bash">
+                % ssh -t devwork \
+                  'tail -f /var/log/daemon.log'
+                </pre>
+
+                <img src="images/remote-tail-log.png" />
+            </div>
+        </div>
+
+        <!-- ================================
+             (07) 
+             ================================  -->
+
+        <div class="slide big">
+          <h1 class="vcenter">
+            <em>-- (07) --</em>
+            <p>Access Remote Resources Locally</p>
+          </h1>
+        </div>
+
+        <div class="slide big">
+            <div class="">
+                <h1>Access our remote MongoDB instance as if local</h1>
+                <hr>
+                <p></p>
+                <pre class="brush: bash">
+                % ssh -NCL 27017:127.0.0.1:27017 devwork
+                </pre>
+
+                <img style="width: 100%;" src="images/remote-tunnel-mongodb.png" />
+            </div>
+        </div>
+
+        <!-- ================================
+             (08) 
+             ================================  -->
+
+        <div class="slide big">
+          <h1 class="vcenter">
+            <em>-- (08) --</em>
+            <p>Named Remote Screen Sessions</p>
+          </h1>
+        </div>
+
+        <div class="slide big">
+            <div class="">
+                <h1>Access a named screen session remotely</h1>
+
+                <hr>
+                <p>Create or continue an admin session</p>
+                <pre class="brush: bash">
+                % ssh -t devwork \
+                    'screen -xRRS admin-mongo'
+                </pre>
+
+                <hr>
+                <p>Again in another window (x3)</p>
+                <pre class="brush: bash">
+                % ssh -t devwork \
+                    'screen -xRRS admin-mongo'
+                </pre>
+            </div>
+        </div>
+
+        <div class="slide big">
+          <h1 class="vcenter">
+            <em>DEMO</em>
+            <p>Four node pair programming session via SSH + GNU Screen</p>
+          </h1>
+        </div>
+
+        <div class="slide big">
+            <div class="">
+                <h1>Ruby Module Specs</h1>
+
+                <hr>
+                <pre class="brush: bash">
+                  Module = Pair
+                  Class  = Programming
+                  Method = fun (should output a string)
+                </pre>
+            </div>
+        </div>
+
+
+        <!-- ================================
+             (09) 
+             ================================  -->
+
+        <div class="slide big">
+          <h1 class="vcenter">
+            <em>-- (09) --</em>
+            <p>Tunnel browser traffic through an SSH server</p>
+          </h1>
+        </div>
+
+        <div class="slide big">
+            <div class="">
+                <h1>Browse via SOCKS proxy</h1>
+                <hr>
+                <p>Setup the SOCKS server</p>
+                <pre class="brush: javascript">
+                % ssh -fNTD 9999 devwork
+                </pre>
+
+                <hr>
+                <p>Tell Google Chrome about our SOCKS server</p>
+                <pre class="brush: javascript">
+                % export SOCKS_SERVER=localhost:9999
+                </pre>
+            </div>
+        </div>
+
+        <!-- ================================
+             (10) 
+             ================================  -->
+
+        <div class="slide big">
+          <h1 class="vcenter">
+            <em>-- (10) --</em>
+            <p>Chrome SSH Client</p>
+          </h1>
+        </div>
+
+        <div class="slide big">
+          <h1>SSH In your browser</h1>
+          <hr>
+          <p><img src="images/chrome-webstore.png" style="width: 100%; " /></p>
+          <hr>
+          <p><img src="images/chrome-sshclient.png" style="width: 100%; " /></p>
+        </div>
+
+        <!-- ================================
+             FIN
+             ================================  -->
+
+        <div class="slide big">
+            <div class="vcenter">
+                <h1>References &amp; Links</h1>
+                <ul>
+                    <li><a href="https://help.github.com/articles/generating-ssh-keys">Github SSH Key Generation Help</a></li>
+                    <li><a href="https://help.github.com/articles/how-do-i-recover-my-ssh-key-passphrase">Recover SSH key passphrase</a></li>
+                    <li>
+                      <a href="http://www.chiark.greenend.org.uk/~sgtatham/putty/download.html">PuTTY</a>, 
+                      <a href="http://www.netsarang.com/products/xsh_overview.html">Xshell</a>,
+                      <a href="http://www.bitvise.com/tunnelier">Tunnelier</a>,
+                      <a href="http://www.vandyke.com/products/securecrt/">SecureCRT</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="slide big">
+            <div class="vcenter">
+                <h1><a style="color: #999;" href="http://twitter.com/wilmoore">@wilmoore</a> on twitter</h1>
+                <hr>
+                <h1><a href="http://goo.gl/jRjLG">Slides for this talk<br><span style="color: #999;">http://goo.gl/jRjLG</span></a></h1>
+                <hr>
+                <h1><a href="http://slidedecks.wilmoore.com/">My Other Slide Decks</a></h1>
+            </div>
+        </div>
+
+        <div class="layout" data-name="default">
+            <content></content>
+        </div>
+
+        <div class="footer">
+            <span class="left">Wil Moore III</span>
+            <span class="right">Company <a href="http://net-results.com/">Net-Results Marketing Automation</a></span>
+            <span class="left">Twitter <a href="http://twitter.com/wilmoore">@wilmoore</a></span>
+            <span class="right">Blog <a href="http://blog.net-results.com/">blog.net-results.com</a></span>
+            <hr class="defloat" />
+        </div>
+    </body>
+</html>
+

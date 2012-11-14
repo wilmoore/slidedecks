@@ -1,0 +1,1329 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>DIY Private Cloud w/ VirtualBox and Chef</title>
+        <meta name="author" content="Wil Moore III" />
+        <meta name="email" content="wil.moore@wilmoore.com" />
+        <meta name="date" content="2012-01-11" />
+        <meta name="venue" content="Confoo 2012" />
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+        <!-- Slippy core file and dependencies -->
+        <script type="text/javascript" src="jquery.min.js"></script>
+        <script type="text/javascript" src="jquery.history.js"></script>
+        <script type="text/javascript" src="slippy.js"></script>
+        <!-- Slippy structural styles -->
+        <link type="text/css" rel="stylesheet" href="slippy.css"/>
+        <!-- Slippy theme -->
+        <link type="text/css" rel="stylesheet" href="slippy-pure.css"/>
+        <!-- Syntax highlighting core file  -->
+        <script type="text/javascript" src="highlighter/shCore.js"></script>
+        <!-- Syntax highlighting brushes, remove those you don't need -->
+        <script type="text/javascript" src="highlighter/shBrushBash.js"></script>
+        <script type="text/javascript" src="highlighter/shBrushCpp.js"></script>
+        <script type="text/javascript" src="highlighter/shBrushCSharp.js"></script>
+        <script type="text/javascript" src="highlighter/shBrushCss.js"></script>
+        <script type="text/javascript" src="highlighter/shBrushDelphi.js"></script>
+        <script type="text/javascript" src="highlighter/shBrushDiff.js"></script>
+        <script type="text/javascript" src="highlighter/shBrushGroovy.js"></script>
+        <script type="text/javascript" src="highlighter/shBrushJava.js"></script>
+        <script type="text/javascript" src="highlighter/shBrushJScript.js"></script>
+        <script type="text/javascript" src="highlighter/shBrushPhp.js"></script>
+        <script type="text/javascript" src="highlighter/shBrushPlain.js"></script>
+        <script type="text/javascript" src="highlighter/shBrushPython.js"></script>
+        <script type="text/javascript" src="highlighter/shBrushRuby.js"></script>
+        <script type="text/javascript" src="highlighter/shBrushScala.js"></script>
+        <script type="text/javascript" src="highlighter/shBrushSql.js"></script>
+        <script type="text/javascript" src="highlighter/shBrushVb.js"></script>
+        <script type="text/javascript" src="highlighter/shBrushXml.js"></script>
+        <!-- Syntax highlighting styles-->
+        <link type="text/css" rel="stylesheet" href="highlighter/shCore.css"/>
+        <link type="text/css" rel="stylesheet" href="highlighter/shThemeMidnight.css"/>
+        <!-- Slippy init code -->
+        <script type="text/javascript">
+            $(function() {
+                SyntaxHighlighter.all();
+                $(".slide").slippy({
+                    animLen: 0
+                });
+            });
+        </script>
+        <style type="text/css">
+            body {
+                background: #fff;
+                background-color:#ffffff;
+                background-image: -moz-radial-gradient(50% 50%, ellipse closest-side, #ffffff, #ccc 100%);
+                background-image: -webkit-radial-gradient(50% 50%, ellipse closest-side, #ffffff, #ccc 100%);
+                background-image: -o-radial-gradient(50% 50%, ellipse closest-side, #ffffff, #ccc 100%);
+                background-image: -ms-radial-gradient(50% 50%, ellipse closest-side, #ffffff, #ccc 100%);
+                background-image: radial-gradient(50% 50%, ellipse closest-side, #ffffff, #ccc 100%);
+            }
+            div.syntaxhighlighter {
+                background: #aaa !important;
+            }
+            .alertWrapper {
+                top: 5%;
+                bottom: auto;
+            }
+            .footer {
+                margin-bottom: 0px;
+            }
+            #background, body.slide-1 .slideDisplay {
+                display: none;
+            }
+            .slideDisplay {
+                color: #666;
+            }
+            a, a:link {
+                text-decoration: none;
+            }
+            h1 {
+                line-height: 130%;
+            }
+            ul li {
+                line-height: 130%;
+            }
+            p {
+                margin-bottom: .7em;
+            }
+            .center {
+                text-align: center;
+            }
+            .slide em {
+                color: #b00;
+            }
+            .slide.showtime:after {
+                content: "Showtime";
+                display: block;
+                text-align: center;
+                position: relative;
+                bottom: 3em;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="slide big">
+            <div class="vcenter">
+                <h1>Wil Moore III<br />@wilmoore<br/>http://wilmoore.com/</h1>
+                <br />
+                <h1><em> DIY Private Cloud ... </em> using VirtualBox and Chef</h1>
+            </div>
+        </div>
+
+        <div class="slide big">
+            <h1>About Me</h1>
+            <p>Denver, Colorado (US)<br /> &nbsp;<a href="http://metrodenver.org">http://www.metrodenver.org/</a></p>
+            <p>Contributor to a few OSS projects<br /> &nbsp;<a href="http://github.com/wilmoore">http://github.com/wilmoore</a></p>
+            <p>Works at Net-Results Marketing Automation<br /> &nbsp;<a href="http://net-results.com">http://net-results.com</a><br /> &nbsp;</p>
+        </div>
+
+        <div class="slide big">
+            <div>
+                <h1>In this talk, you will <em>NOT</em>:</h1>
+                <ul>
+                    <li class="incremental">learn <em>system administration</em></li>
+                    <li class="incremental">get a <em>Virtualization</em> primer</li>
+                    <li class="incremental">it is expected that <em>you grok</em> these things</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="slide big">
+            <div>
+                <h1>But you <em>WILL</em>:</h1>
+                <ul>
+                    <li class="incremental">learn to use free tools to <em>build on top of</em></li>
+                    <li class="incremental">learn to deploy node instances <em>on-demand</em></li>
+                    <li class="incremental">learn to build <em>elastic infrastructure</em></li>
+                    <li class="incremental">learn to <em>automate</em> your stack installs</li>
+                    <li class="incremental">learn to use <em>existing resources</em> effectively</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="slide big">
+            <div>
+                <h1>In other words...</h1>
+                <ul>
+                    <li class="incremental">This is <em>NOT</em> a <em>framework</em>...</li>
+                    <li class="incremental">However, it is more like a <em>toolkit</em></li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="slide big">
+            <div>
+                <h1>Can't I just <em>copy</em> your setup?</h1>
+                <ul>
+                    <li class="incremental">There is <em>no one size</em> fits-all model</li>
+                    <li class="incremental">Your <em>infrastructure needs</em> are unique</li>
+                    <li class="incremental">Your <em>available resources</em> are unique</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="slide big">
+            <div>
+                <h1>What's the <em>killer application</em> of cloud infrastructure?</h1>
+                <ul>
+                    <li class="incremental">The ability to <em>rapidly adapt</em> to changes</li>
+                    <li class="incremental">The ability to change and <em>scale with confidence</em></li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- ================================  -->
+
+        <div class="slide big">
+            <div class="vcenter">
+                <h1><em>How</em> do we start?</h1>
+            </div>
+        </div>
+
+        <div class="slide big">
+            <div class="">
+                <h1><em>Preallocate</em></h1>
+                <ul>
+                    <li class="incremental">Utilize <em>existing</em> infrustructure</li>
+                    <li class="incremental">Deploy only what you need</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="slide big">
+            <div class="">
+                <h1><em>Calculate #</em> of guest instances:</h1>
+                <pre class="brush: plain">
+=>Physical Hosts : {02}
+=>Guests per Host: {04} (multiply)
+-----------------------
+  Total Guests   :   8
+              </pre>
+            </div>
+        </div>
+
+        <div class="slide big">
+            <div class="">
+                <h1><em>Calculate min. #</em> standby hosts</h1>
+                <pre class="brush: plain">
+=>Total Guests   :   8 (previous result)
+=>~ 15% of usage : .15
+-----------------------
+                   1.2 (1.2.round = 1)
+              </pre>
+            </div>
+        </div>
+
+        <div class="slide big">
+            <div class="">
+                <h1><em>Want a green </em> environment?</h1>
+                <ul>
+                    <li class="incremental">Network <em>Power Switches</em> are awesome</li>
+                    <li class="incremental">Use the <em>HTTP API</em> for <em>automated</em> ON|OFF</li>
+                    <li class="incremental">If it is telnet-only, use <a href="http://en.wikipedia.org/wiki/Expect">Expect</a></li>
+<div class="incremental ">
+                    <pre class="brush: bash">
+# telnet: wait for username prompt
+spawn telnet ${remote_server}
+expect "username:"
+
+# send username
+send "$my_user_id\r"
+# wait for password prompt
+send "$my_user_id\r"
+expect "password:"
+...
+                    </pre>
+</div>
+                </ul>
+            </div>
+        </div>
+
+        <!-- ================================
+             Virtualbox
+             ================================  -->
+
+        <div class="slide big">
+            <div class="">
+                <h1>Installing <em>VirtualBox</em> (MAC OSX)</h1>
+                <pre class="brush: bash">
+$ VBOX_LATEST_VERSION=$(curl ...)
+$ VBOX_LATEST_FILE_OSX=$(wget ...)
+
+$ wget -c http://download...
+$ hdiutil mount /tmp/${VBOX_LATEST...
+$ sudo installer -pkg
+$ hdiutil unmount /Volumes/VirtualBox
+
+$ wget -c http://download...
+$ VBoxManage extpack uninstall
+$ VBoxManage extpack cleanup
+$ VBoxManage extpack install...
+                </pre>
+                <h2>Full script @ Github:</h2>
+                <a href="https://gist.github.com/1615295#file_install_virtualbox_latest_macosx.sh">install-virtualbox-latest-macosx.sh</a>
+            </div>
+        </div>
+
+        <div class="slide big">
+            <div class="">
+                <h1>Installing <em>VirtualBox</em> (Ubuntu)</h1>
+                <pre class="brush: bash">
+$ > ... sources.list.d/virtualbox.list'
+$ wget -q http://download...
+...
+
+$ wget -c http://download...
+$ VBoxManage extpack uninstall...
+$ VBoxManage extpack cleanup...
+$ VBoxManage extpack install...
+
+$ usermod -a -G vboxusers nodemanager
+                </pre>
+                <h2>Full script @ Github:</h2>
+                <a href="https://gist.github.com/1615295#file_install_virtualbox_latest_ubuntu.sh">install-virtualbox-latest-ubuntu.sh</a>
+            </div>
+        </div>
+
+        <div class="slide big">
+            <div class="">
+                <h1>Installing <em>VirtualBox</em> (RHEL)</h1>
+                <pre class="brush: bash">
+have fun with this homework excercise :)
+                </pre>
+                <h2>Start Here:</h2>
+                <a href="http://download.virtualbox.org/virtualbox/rpm/rhel/">Virtualbox RPM FTP</a>
+            </div>
+        </div>
+
+        <!-- ================================
+             Guest Instances
+             ================================  -->
+
+        <div class="slide big">
+            <div class="vcenter">
+                <h1>Creating <em>guest</em> instances</h1>
+            </div>
+        </div>
+
+        <div class="slide big">
+          <div class="">
+            <h1>Virtualbox has <em>many </em> interfaces</h1>
+            <ul>
+              <li class="incremental">SOAP</li>
+              <li class="incremental"><em>COM</em> (C++)</li>
+              <li class="incremental">XPCOM</li>
+              <li class="incremental"><em>GUI</em></li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="slide big">
+            <div class="vcenter">
+              <h1><em>GUI</em> interfaces are generally difficult to <em>automate</em></h1>
+            </div>
+        </div>
+
+        <div class="slide big">
+            <div class="">
+              <h1>You <em>can use</em> SOAP or (XP)COM...</h1>
+            </div>
+            <div class="vcenter">
+              <h1 class="incremental"><em>BUT</em>...</h1>
+            </div>
+        </div>
+
+        <div class="slide big">
+            <div class="">
+              <h1>Virtualbox has an <em>alternative interface</em>!</h1>
+            </div>
+            <div class="vcenter">
+              <h1 class="incremental"><em>VBoxManage</em> (CLI)</h1>
+            </div>
+        </div>
+
+        <div class="slide big">
+            <div class="">
+                <h1>The <em>VboxManage</em> command</h1>
+                <ul>
+                    <li class="incremental"><em>Linux</em></li>
+                    <li class="incremental">Mac OS</li>
+                    <li class="incremental"><em>Windows</em></li>
+                    <li class="incremental">exposes functionality <em>beyond what the GUI</em> provides</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="slide big">
+            <div class="">
+                <h1><em>VboxManage</em> sub-commands</h1>
+                <ul>
+                  <li class="incremental">VBoxManage <em>controlvm</em></li>
+                  <li class="incremental">VBoxManage <em>storageattach</em></li>
+                  <li class="incremental">VBoxManage <em>storagectl</em></li>
+                  <li class="incremental">VBoxManage <em>showhdinfo</em></li>
+                  <li class="incremental">VBoxManage <em>(create|modify|clone)</em>hd</li>
+                  <li class="incremental">VBoxManage <em>(get|set)</em>extradata</li>
+                  <li class="incremental">VBoxManage <em>setproperty</em></li>
+                  <li class="incremental">VBoxManage <em>guestproperty</em></li>
+                  <li class="incremental">VBoxManage <em>guestcontrol</em></li>
+                  <li class="incremental">VBoxManage <em>metrics</em></li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="slide big">
+            <div class="">
+                <h1>Create a <em>new machine instance</em></h1>
+                <pre class="brush: bash">
+# create a new virtual machine
+echo "Creating Machine: '$NEW_VM_NAME'"
+VBoxManage createvm \
+  --name $NEW_VM_NAME \
+  --register
+                </pre>
+            </div>
+        </div>
+
+        <div class="slide big">
+            <div class="">
+                <h1>Start with <em>modest server</em> defaults</h1>
+                <pre class="brush: bash">
+# modify the VM using server defaults
+VBoxManage modifyvm $NEW_VM_NAME \
+  --ostype Ubuntu_64 \
+  --clipboard disabled \
+  --memory 512 \
+  --cpus 1 \
+  --acpi on \
+  --ioapic off \
+  ...
+                </pre>
+            </div>
+        </div>
+
+        <div class="slide big">
+            <div class="">
+                <h1><em>Network</em> & port-<em>forward</em> setup</h1>
+                <pre class="brush: bash">
+# host only network access
+VBoxManage modifyvm $NEW_VM_NAME \
+  --nictype1 82540EM \
+  --nic1 hostonly \
+  --hostonlyadapter1 vboxnet0
+
+# setup NAT and SSH via port 2222
+VBoxManage modifyvm $NEW_VM_NAME \
+  --nictype2 82540EM \
+  --nic2 nat \
+  --natpf2 "ssh,tcp,,2222,,22"
+                </pre>
+            </div>
+        </div>
+
+        <div class="slide big">
+            <div class="">
+                <h1>Quick <em>SSH</em> tip</h1>
+                <pre class="brush: bash">
+# ~/.ssh/config
+Host nodebuilder
+    User nodebuilder
+    Port 2222
+    Hostname localhost
+    IdentityFile ~/.ssh/nodebuilder.pem
+                </pre>
+
+                <pre class="brush: bash">
+# password-less login
+$ ssh nodebuilder
+                </pre>
+            </div>
+        </div>
+
+        <div class="slide big">
+            <div class="">
+                <h1>Hard <em>disk(s)</em> & <em>controller</em> setup</h1>
+                <pre class="brush: bash">
+# define a SATA controller
+VBoxManage storagectl $NEW_VM_NAME \
+  --name "SATA Controller 1" \
+  --add sata \
+  --controller IntelAHCI \
+  --hostiocache on
+
+# attach disk image to the controller
+VBoxManage storageattach $NEW_VM_NAME \
+  --storagectl "SATA Controller 1" \
+  --type hdd \
+  --port 0 \
+  --device 0 \
+  --medium $NEW_VDI_PATH
+                </pre>
+            </div>
+        </div>
+
+        <div class="slide big">
+            <div class="">
+                <h1><em>Remote access</em> setup</h1>
+                <pre class="brush: bash">
+# RDP access setup
+VBoxManage modifyvm $NEW_VM_NAME \
+  --vrdeport "5000-6000" \
+  --vrde off \
+  --vrdeauthtype null \
+  --vrdemulticon on
+                </pre>
+            </div>
+        </div>
+
+        <div class="slide big">
+            <div class="">
+                <h1><em>Start</em> the new guest instance</h1>
+                <pre class="brush: bash">
+# start the VM in headless mode
+# NOTE: VBoxHeadless turns on RDP (VRDE)
+VBoxHeadless --startvm $NEW_VM_NAME
+                </pre>
+                <h2>Full Script Here:</h2>
+                <a href="https://gist.github.com/1615295#file_nodebuilder.sh">https://gist.github.com/1615295#file_nodebuilder.sh</a>
+            </div>
+        </div>
+
+        <div class="slide big">
+            <div class="">
+              <h1><em>Accessing</em> your instances</h1>
+              <ul>
+                <li class="incremental"><em>RDP</em> (any remote desktop client)</li>
+                <li class="incremental"><em>SSH</em></li>
+                <li class="incremental"><em>VBoxManage guestcontrol</em> (limited)</li>
+              </ul>
+            </div>
+        </div>
+
+        <!-- ================================
+             Starting & Stopping
+             ================================  -->
+
+        <div class="slide big">
+            <div class="">
+              <h1><em>Starting</em> and <em>stopping</em> instances</h1>
+              <ul>
+                <li class="incremental">on <em>startup</em></li>
+                <li class="incremental">on <em>shutdown</em></li>
+              </ul>
+            </div>
+        </div>
+
+        <div class="slide big">
+          <div class="">
+            <h1>Use <em>Upstart</em> (if using <em>Ubuntu</em>)</h1>
+            <h2 class="incremental">Otherwise</h2>
+            <ul>
+              <li class="incremental">SysV-style <em>init</em> script</li>
+              <li class="incremental"><em>Monit</em></li>
+              <li class="incremental"><em>runit</em></li>
+              <li class="incremental">etc...</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="slide big">
+            <div class="">
+                <h1><em>Upstart</em> sample script</h1>
+                <pre class="brush: bash">
+#/etc/init/vbox-node1.conf
+
+description "node1"
+start on (local-filesystems and net-device-up IFACE=eth0)
+stop on runlevel [016]
+
+... -c "VBoxHeadless --startvm node1"
+                </pre>
+                <h2>Full Script Here:</h2>
+                <a href="https://gist.github.com/1615295#file_vbox_node1.conf">https://gist.github.com/1615295#file_vbox_node1.conf</a>
+            </div>
+        </div>
+
+        <div class="slide big">
+            <div class="">
+                <h1>Cool <em>tools</em></h1>
+                <ul>
+                  <li class="incremental"><a href="http://ddollar.github.com/foreman/">Foreman</a> (exports init/upstart scripts)</li>
+                  <li class="incremental"><a href="http://vboxtool.sourceforge.net/">VBoxTool</a> (session management)</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- ================================
+             Creating/Using virtualbox images
+             ================================  -->
+
+        <div class="slide big">
+            <div class="vcenter">
+              <h1>Managing disk <em>images</em></h1>
+            </div>
+        </div>
+
+        <div class="slide big">
+            <div class="">
+                <h1>Disk images <em>can be</em>:</h1>
+                <ul>
+                  <li class="incremental">created from scratch</li>
+                  <li class="incremental">cloned (copied)</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="slide big">
+            <div class="vcenter">
+                <h1>Creating disk images <em>is boring</em></h1>
+            </div>
+        </div>
+
+        <div class="slide big">
+            <div class="">
+                <h1><em>Solution</em>:</h1>
+                <ul>
+                  <li class="incremental">create a base image</li>
+                  <li class="incremental">clone it</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="slide big">
+            <div class="">
+                <h1><em>Where</em> to store images?</h1>
+                <ul>
+                  <li class="incremental">Thumb Drive (don't laugh)</li>
+                  <li class="incremental">Network Share</li>
+                  <li class="incremental">S3*</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="slide big">
+            <div class="">
+                <h1><em>Clone</em> a disk image</h1>
+                <pre class="brush: bash">
+# power-down the virtual machine
+$ VBoxManage controlvm \
+  $NEW_VM_NAME acpipowerbutton
+
+# clone the base disk image (temp file)
+BASEVM_NAME=$COMPANY-$PLATFORM
+# e.g. example-ubuntu-lucid64
+
+$ VBoxManage clonevdi $NEW_VM_NAME.vdi \
+  /tmp/$BASEVM_NAME.vdi
+
+# archive/compress
+$ cd /tmp
+$ tar -czf \
+  $BASEVM_NAME.tgz $BASEVM_NAME.vdi
+                </pre>
+            </div>
+        </div>
+
+        <div class="slide big">
+            <div class="">
+                <h1><em>Clone</em> a disk image (cont.)</h1>
+                <pre class="brush: bash">
+# push to s3
+$ s3cmd put \
+  --acl-public \
+  --guess-mime-type \
+  /tmp/$BASEVM_NAME.tgz \
+  s3://$S3_BUCKET/$BASEVM_NAME.tgz
+                </pre>
+            </div>
+        </div>
+
+        <div class="slide big">
+            <div class="">
+              <h1>Tips to create <em>lean</em> base images</h1>
+                <ul>
+                  <li class="incremental">Use <em>RDP</em> to login to a clean VM</li>
+                  <li class="incremental">Install <em>Minimal CD</em> (<a href="http://bit.ly/2wumw">http://bit.ly/2wumw</a>)</li>
+                  <li class="incremental">Install only <em>necessities</em> (SSH, <em>Ruby</em>, Chef)</li>
+                </ul>
+            </div>
+            <div class="incremental">
+              <hr>
+              <h2>Sample Ubuntu base install:</h2>
+              <a href="https://gist.github.com/1615295#file_ubuntu_base_install.rst">https://gist.github.com/1615295#file_ubuntu_base_install.rst</a>
+            </div>
+        </div>
+
+        <!-- ================================
+             Chef intro
+             ================================  -->
+
+        <div class="slide big">
+            <div class="vcenter">
+              <h1>Cooking with <em>Chef</em></h1>
+            </div>
+        </div>
+
+        <div class="slide big">
+            <div class="">
+              <h1><em>Infrastructure</em> as <em>code</em></h1>
+              <ul>
+                <li class="incremental">You <em>define</em> a <em>cookbook</em></li>
+                <li class="incremental"><em>Cookbooks</em> have <em>recipes</em></li>
+                <li class="incremental"><em>Recipes</em> define <em>packages, files, and templates</em></li>
+                <li class="incremental"><em>Roles</em> determine which packages to <em>install</em></li>
+                <li class="incremental"><em>Machine Instances</em> are <em>assigned</em> a <em>role</em></li>
+              </ul>
+            </div>
+        </div>
+
+        <!-- ================================
+             Creating chef recipes
+             ================================  -->
+
+        <div class="slide big">
+            <div class="vcenter">
+              <h1>Let's create a <em>cookbook</em></h1>
+            </div>
+        </div>
+
+        <div class="slide big">
+            <div class="">
+              <h1>The <em>software</em> stack <em>contains</em></h1>
+              <ul>
+                <li class="incremental">NodeJs</li>
+                <li class="incremental"><em>Redis</em></li>
+                <li class="incremental">MongoDB</li>
+              </ul>
+            </div>
+        </div>
+
+        <div class="slide big">
+            <div class="">
+              <h1>Our <em>infrastructure consists</em> of:</h1>
+              <ul>
+                <li class="incremental">Multiple productions servers</li>
+                <li class="incremental">A <em>local</em> developer instance</li>
+              </ul>
+            </div>
+        </div>
+
+        <div class="slide big">
+            <div class="">
+              <h1>Create cookbook Git repository</h1>
+              <pre class="brush: plain">
+$ cd /projects
+$ mkdir -p chefproject/provisioners/chef
+$ cd chefproject
+$ git init
+$ touch README
+$ git add .
+$ git commit -am 'init project'
+              </pre>
+            </div>
+        </div>
+
+        <div class="slide big">
+            <div class="">
+              <h1>Create the chef-solo driver</h1>
+              <pre class="brush: plain">
+$ mkdir -p provisioners/chef/bin
+$ cat > provisioners/chef/bin/solo.rb &lt;&lt;EOF
+...
+EOF
+              </pre>
+            </div>
+        </div>
+
+        <div class="slide big">
+            <div class="">
+              <h1>or just <em>copy</em> from...</h1>
+              <pre class="brush: plain">
+$ curl http://git.io/ukhc6g \
+  > provisioners/chef/bin/solo.rb
+              </pre>
+              <img src="images/code-solo-rb.png" />
+            </div>
+            <hr />
+            <h2>Full script:</h2>
+            <a href="https://gist.github.com/1615295#file_solo.rb">https://gist.github.com/1615295#file_solo.rb</a>
+        </div>
+
+        <div class="slide big">
+            <div class="">
+              <h1>If we were to run "solo" right now...</h1>
+              <pre class="brush: plain">
+# run chef-solo from project root
+$ sudo chef-solo \
+  -c provisioners/chef/bin/solo.rb
+              </pre>
+            </div>
+            <div class="incremental">
+              <img style="margin-left: auto;" src="images/testrun-solo-rb.png" />
+              <h2 class="incremental">Now, we just need a <em>cookbook</em></h2>
+            </div>
+        </div>
+
+        <div class="slide big">
+            <div class="">
+              <h1>We <em>could</em> just download cookbooks</h1>
+              <a href="http://community.opscode.com/cookbooks/redis">http://community.opscode.com/cookbooks/redis</a>
+              <hr>
+              <h2 class="incremental">BUT...</h2>
+
+              <ul>
+                <li class="incremental">There is a lot of cruft in those packages</li>
+                <li class="incremental">Distribution-specfic logic/branching</li>
+                <li class="incremental">We want to keep it simple</li>
+                <li class="incremental">We want to understand what is under the covers</li>
+                <li class="incremental">YMMV</li>
+              </ul>
+
+            </div>
+        </div>
+
+        <div class="slide big">
+            <div class="">
+              <h1>Our <em>first cookbook</em></h1>
+              <pre class="brush: plain">
+$ mkdir -p cookbooks/redis/recipes
+
+$ cat > cookbooks/redis/recipes/default.rb &lt;&lt;EOF
+# Cookbook Name:: redis
+# Recipe:: default
+
+...
+
+EOF
+              </pre>
+            </div>
+        </div>
+
+        <div class="slide big">
+            <div class="">
+              <h1>Our <em>first cookbook</em> (cont.)</h1>
+              <pre class="brush: plain">
+...
+case node['platform']
+when "ubuntu"
+    execute "apt-get update" do
+        action    :nothing
+    end
+
+    package "redis-server" do
+        action    :install
+        options   '--force-yes'
+    end
+else
+  Chef::Log.error "no platform support."
+end
+              </pre>
+            </div>
+        </div>
+
+        <div class="slide big">
+            <div class="">
+              <h1>If we were to run <em>"solo"</em> again...</h1>
+              <pre class="brush: bash">
+# run chef-solo from project root
+$ sudo chef-solo \
+  -c provisioners/chef/bin/solo.rb
+              </pre>
+              <pre class="brush: bash">
+INFO: *** Chef 0.10.4 ***
+INFO: Run List is []
+INFO: Run List expands to []
+INFO: Starting Chef Run for ...
+INFO: Chef Run complete in 0.002633
+INFO: Running report handlers
+INFO: Report handlers complete
+              </pre>
+            </div>
+              <h2 class="incremental">No more missing <em>cookbook</em> errors!</h2>
+            </div>
+        </div>
+
+        <div class="slide big">
+            <div class="vcenter">
+              <h1>However; <em>nothing</em> got installed</h1>
+            </div>
+        </div>
+
+        <div class="slide big">
+            <div>
+              <h1>We need to <em>specify</em> what to install</h1>
+              <h1 class="vcenter incremental">Let's create a <em>run list</em></h1>
+            </div>
+        </div>
+
+        <div class="slide big">
+            <div>
+              <h1>A minimal <em>"run list"</em> configuration</h1>
+              <pre class="brush: js">
+# provisioners/chef/run/fullstack.json
+{ "run_list": "recipe[redis]" }
+              </pre>
+              <h1>The equivalent <em>role</em> configuration</h1>
+              <pre class="brush: ruby">
+# provisioners/chef/roles/fullstack.rb
+name        'fullstack'
+description 'installs everything'
+run_list    'recipe[redis]'
+              </pre>
+            </div>
+        </div>
+
+        <div class="slide big">
+            <div class="vcenter">
+              <h1>I prefer <em>"run lists"</em>, but YMMV</h1>
+            </div>
+        </div>
+
+        <div class="slide big">
+            <div class="">
+              <h1>run <em>"solo"</em> against the role</h1>
+              <pre class="brush: plain">
+# run chef-solo from project root
+$ sudo chef-solo \
+  -c provisioners/chef/bin/solo.rb \
+  -j provisioners/chef/run/fullstack.json
+              </pre>
+              <pre class="brush: plain">
+...
+INFO: Run List is [recipe[redis]]
+INFO: Run List expands to [redis]
+INFO: Processing package[redis-server]
+...
+INFO: Running report handlers
+INFO: Report handlers complete
+              </pre>
+            </div>
+        </div>
+
+        <div class="slide big">
+            <div class="">
+              <h1><em>Play</em> with "redis"</h1>
+              <pre class="brush: plain">
+$ echo 'chef is awesome' | redis-cli \
+  set awesome
+=> OK
+
+$ redis-cli get awesome
+=> chef is awesome
+              </pre>
+            </div>
+        </div>
+
+        <div class="slide big">
+            <div class="">
+              <h1><em>MongoDB</em> cookbook</h1>
+              <pre class="brush: plain">
+...
+  execute "add gpg key" do
+      command   "apt-key ...
+      action    :nothing
+  end
+...
+  package "mongodb-10gen" do
+      action    :install
+      options   '--force-yes'
+  end
+...
+              </pre>
+            </div>
+            <h2>Full script:</h2>
+            <a href="https://gist.github.com/1615295#file_default.rb">https://gist.github.com/1615295#file_default.rb</a>
+        </div>
+
+        <div class="slide big">
+            <div class="">
+              <h1><em>NodeJs</em> cookbook</h1>
+              <pre class="brush: plain">
+...
+bash "install nodejs from source" do
+  curl -# -L //...node-latest.tar.gz
+  ./configure --prefix=/usr/local
+  make install
+end
+...
+              </pre>
+            </div>
+            <h2>Full script:</h2>
+            <a href="https://gist.github.com/1615295#file_nodejs.rb">https://gist.github.com/1615295#file_nodejs.rb</a>
+        </div>
+
+        <div class="slide big">
+            <div class="">
+              <h1>Full stack <em>run list</em></h1>
+              <pre class="brush: plain">
+# provisioners/chef/run/fullstack.json
+{ "run_list":
+  [
+    "recipe[nodejs]",
+    "recipe[redis]",
+    "recipe[mongodb]"
+  ]
+}
+              </pre>
+            </div>
+        </div>
+
+        <!-- ================================
+             Creating developer instances
+             ================================  -->
+
+        <div class="slide big">
+            <div class="">
+              <h1>Bonus <em>Developer tips</em></h1>
+              <div class="incremental">
+                <pre class="brush: plain">
+# provisioners/chef/run/developer.json
+{ "run_list": "recipe[redis]" }
+                </pre>
+              </div>
+              <div class="incremental">
+                <ul>
+                  <li class="incremental"><em>Continuously build</em> your local VM</li>
+                  <li class="incremental"><em>Script</em> your <em>builds</em> for CI and re-use locally</li>
+                  <li class="incremental"><em>ssh</em> takes multi-line <em>command sequences</em></li>
+                </ul>
+
+                <div class="incremental">
+                  <pre class="brush: plain">
+                  ssh -t user@vm-instance &lt;&lt;ssh-session
+sudo chef-solo -c solo.rb
+ssh-session
+                  </pre>
+                </div>
+
+                <h2 class="incremental"><em>Yes</em>, that is a <em>heredoc</em>!</h2>
+
+              </div>
+            </div>
+        </div>
+
+        <div class="slide big">
+            <div class="">
+              <h1>Bonus <em>Developer tips</em> (cont.)</h1>
+              <div class="incremental">
+                <pre class="brush: plain">
+# run "sudo chef-solo" w/o a password
+$ sudo visudo
+
+# /etc/sudoers
+you  ALL=(root) NOPASSWD: chef-solo *
+                </pre>
+              </div>
+            </div>
+        </div>
+
+        <!-- ================================
+             Caveats
+              - use properties, not node names for roles/run-lists
+              - look into a distributed key/value store for hierarchical configuration
+                - redis
+                - doozer
+                - zookeeper
+             ================================  -->
+
+        <div class="slide big">
+            <div class="vcenter">
+              <h1>Dealing with <em>dynamic</em> configurations</h1>
+            </div>
+        </div>
+
+        <div class="slide big">
+            <div class="">
+              <h1>Per host <em>dynamic</em> configurations</h1>
+              <div class="incremental">
+                <ul>
+                  <li class="incremental"><em>IP</em> and <em>DNS</em> settings</li>
+                  <li class="incremental"><em>Machine name</em> and server <em>role</em>(s)</li>
+                  <li class="incremental"><em>Application</em> passwords <br/><em>Passwords in your SCM</em> is A NO-NO!!</li>
+                </ul>
+              </div>
+            </div>
+        </div>
+
+        <div class="slide big">
+            <div class="vcenter">
+              <h1><em>Where</em> do we store this stuff?</h1>
+            </div>
+        </div>
+
+        <div class="slide big">
+            <div class="">
+              <h1>Distributed <em>Key-Value</em> Stores <em>FTW</em>!!!</h1>
+              <div class="incremental">
+                <ul>
+                  <li class="incremental">LDAP <em>(you may already have it)</em></li>
+                  <li class="incremental"><em>Redis</em> (fast and tiny, but no clustering)</li>
+                  <li class="incremental">Zookeeper <em>(lots of moving parts)</em></li>
+                  <li class="incremental"><em>Doozer</em> (like Zookeeper, but tiny)</li>
+                </ul>
+              </div>
+            </div>
+        </div>
+
+        <div class="slide big">
+            <div class="">
+              <h1>Doozer <em>in action</em></h1>
+                <pre class="brush: plain">
+# adding a file
+$ echo '{ "role": "...", "ip": "..." }' | doozer add /host/xxx/instance/LITHIUM
+
+99
+
+# finding files by path
+$ doozer find /host/xxx/instance
+
+/host/xxx/instance
+/host/xxx/instance/LITHIUM
+                </pre>
+            </div>
+        </div>
+
+
+        <div class="slide big">
+            <div class="">
+              <h1>Doozer <em>in action</em></h1>
+                <pre class="brush: plain">
+# getting a document
+$ doozer get .../LITHIUM | jsonpretty 
+{
+  "role": "fullstack",
+  "ip": "192.168.1.130"
+}
+                </pre>
+            </div>
+        </div>
+
+        <div class="slide big">
+            <div class="">
+              <h1>Setting and Getting <em>Properties</em></h1>
+              <div class="incremental">
+                <pre class="brush: plain">
+$ VBoxManage guestproperty \
+  get '/VirtualBox/GuestInfo/OS/Version'
+
+#59-Ubuntu SMP Thu Jan 28 01:23:03 UTC 2010,
+                </pre>
+              </div>
+
+              <div class="incremental">
+                <pre class="brush: plain">
+$ VBoxManage guestproperty \
+  set 'role' 'fullstack'
+                </pre>
+              </div>
+
+              <div class="incremental">
+                <pre class="brush: plain">
+$ VBoxManage guestproperty get 'role'
+
+fullstack
+                </pre>
+              </div>
+            </div>
+        </div>
+
+        <!-- ================================
+             Advanced Topics
+              - Application deployment via OS packaging
+              - tools to help with that
+             ================================  -->
+
+        <div class="slide big">
+            <div class="vcenter">
+              <h1>Application Packaging</h1>
+            </div>
+        </div>
+
+        <div class="slide big">
+            <div class="">
+              <h1><em>Effing</em> Package Managers!</h1>
+
+              <div class="incremental">
+                <pre class="brush: plain">
+  # install the fpm gem
+  $ gem install fpm
+                </pre>
+              </div>
+
+              <div class="incremental">
+                <pre class="brush: plain">
+  # package the crm webapp
+  $ fpm -s dir -t deb -n crm-webapp \
+    -v 0.0.1 -p crm-webapp.0.0.1.deb \
+    src/public src/lib src/web
+                </pre>
+              </div>
+              <h2>Get <em>fpm</em> here:</h2>
+              <a href="https://github.com/jordansissel/fpm">https://github.com/jordansissel/fpm</a>
+            </div>
+        </div>
+
+
+        <div class="slide big">
+            <div class="">
+              <h1><em>fpm</em> and Chef</h1>
+
+              <div class="incremental">
+                <pre class="brush: plain">
+  # install the deb package
+  $ sudo dpkg -i crm-webapp.0.0.1.deb
+                </pre>
+              </div>
+
+              <h2 class="incremental">or with <em>Chef</em></h2>
+
+              <div class="incremental">
+                <pre class="brush: plain">
+dpkg_package "crm-webapp.0.0.1.deb" do
+  package_name "crm-webapp"
+  source "crm-webapp.0.0.1.deb"
+  action :install
+end
+                </pre>
+              </div>
+
+              <h2>Get <em>fpm</em> here:</h2>
+              <a href="https://github.com/jordansissel/fpm">https://github.com/jordansissel/fpm</a>
+            </div>
+        </div>
+
+        <!-- ================================
+             Deploying Instances on Demand
+             ================================  -->
+
+        <div class="slide big">
+            <div class="vcenter">
+              <h1>Automating with Jenkins</h1>
+            </div>
+        </div>
+
+        <div class="slide big">
+            <div class="">
+              <h1><em>Jenkins</em> Job List</h1>
+                <img src="images/jenkins-jobs.png" />
+            </div>
+        </div>
+
+        <div class="slide big">
+            <div class="">
+              <h1><em>Terminating</em> Instances!</h1>
+              <div class="vcenter center">
+                <img src="images/instance-choice-terminate.png" />
+              </div>
+            </div>
+        </div>
+
+        <div class="slide big">
+            <div class="">
+              <h1><em>Terminating</em> Instances!</h1>
+                <img src="images/instance-terminate-ssh.png" />
+            </div>
+        </div>
+
+        <div class="slide big">
+            <div class="">
+              <h1><em>Creating</em> Instances!</h1>
+                <img src="images/instance-create-ssh.png" />
+            </div>
+        </div>
+
+        <div class="slide big">
+            <div class="">
+              <h1>Failover <em>and Monitoring</em></h1>
+              <div class="incremental">
+                <ul>
+                  <li class="incremental"><em>Nagios</em> for Monitoring</li>
+                  <li class="incremental">VBoxManage <em>metrics</em> ...</li>
+                  <li class="incremental">VBoxManage <em>guestproperty</em> ...</li>
+                </ul>
+              </div>
+            </div>
+        </div>
+
+        <!-- ================================
+             Alternatives
+             ================================  -->
+
+        <div class="slide big">
+            <div class="">
+              <h1>Virtualization Software</h1>
+              <div class="incremental">
+                <ul>
+                  <li class="incremental">Xen</li>
+                  <li class="incremental">KVM</li>
+                </ul>
+              </div>
+            </div>
+        </div>
+
+        <div class="slide big">
+            <div class="">
+              <h1>Configuration Management</h1>
+              <div class="incremental">
+                <ul>
+                  <li class="incremental">Puppet</li>
+                  <li class="incremental">CFengine</li>
+                </ul>
+              </div>
+            </div>
+        </div>
+
+        <!-- ================================
+             Closing
+             ================================  -->
+
+        <div class="slide big">
+            <div class="vcenter">
+                <h1>Thank you.</h1>
+            </div>
+        </div>
+
+        <div class="slide big">
+            <div class="vcenter">
+                <h1><em>Slides</em>: <a href="https://github.com/wilmoore/talks">https://github.com/wilmoore/talks</a></h1>
+            </div>
+        </div>
+
+        <div class="slide big">
+            <div class="vcenter">
+                <h1>References &amp; Links</h1>
+                <ul>
+                    <li><a href="http://www.virtualbox.org/manual/ch08.html#idp5741680">VBoxManage Commands overview</a></li>
+                    <li><a href="http://upstart.ubuntu.com/">Upstart</a></li>
+                    <li><a href="http://wiki.opscode.com/display/chef/Setting+the+run_list+in+JSON+during+run+time">Setting the run_list in JSON during run time</a></li>
+                    <li><a href="http://cloudcomputingpatterns.org/">Cloud Computing Patterns</a></li>
+                    <li><a href="http://broadcast.oreilly.com/assets_c/2010/06/Cloud-Computing.html/">The Cloud Computing Mind Map</a></li>
+                    <li><a href="http://www.remotepowerswitch.com/"> RPS-ERP II Remote Power Switch</a></li>
+                    <li><a href="http://www.remotepowerswitch.com/web-instruct3a.htm">RPS-ERP II - Instructions</a></li>
+                    <li><a href="http://www.synaccess-net.com/remote-power.php/1/54">5 Outlet Remote Power Management Strip</a></li>
+                    <li><a href="http://en.wikipedia.org/wiki/Expect">Expect @ Wikipedia</a></li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="slide big">
+            <div class="vcenter">
+                <h1>Feedback &amp; Questions:</h1>
+                <h1><a href="mailto:wil.moore@wilmoore.com">wil.moore@wilmoore.com</a></h1>
+                <h1><a href="https://twitter.com/seldaek">@wilmoore</a></h1>
+            </div>
+        </div>
+
+        <div class="layout" data-name="default">
+            <content></content>
+        </div>
+
+        <div class="footer">
+            <span class="left">Wil Moore III</span>
+            <span class="right">Company <a href="http://net-results.com/">Net-Results Marketing Automation</a></span>
+            <span class="left">Twitter <a href="http://twitter.com/wilmoore">@wilmoore</a></span>
+            <span class="right">Blog <a href="http://blog.net-results.com/">blog.net-results.com</a></span>
+            <hr class="defloat" />
+        </div>
+    </body>
+</html>
+

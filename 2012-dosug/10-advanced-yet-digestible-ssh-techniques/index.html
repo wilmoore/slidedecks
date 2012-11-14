@@ -1,0 +1,1126 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>10 advanced, yet digestible SSH techniques</title>
+        <meta name="author" content="Wil Moore III" />
+        <meta name="email" content="wil.moore@wilmoore.com" />
+        <meta name="date" content="2012-05-13" />
+        <meta name="venue" content="DOSUG" />
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+        <!-- Slippy core file and dependencies -->
+        <script type="text/javascript" src="jquery.min.js"></script>
+        <script type="text/javascript" src="jquery.history.js"></script>
+        <script type="text/javascript" src="slippy.js"></script>
+        <!-- Slippy structural styles -->
+        <link type="text/css" rel="stylesheet" href="slippy.css"/>
+        <!-- Slippy theme -->
+        <link type="text/css" rel="stylesheet" href="slippy-pure.css"/>
+        <!-- Syntax highlighting core file  -->
+        <script type="text/javascript" src="highlighter/shCore.js"></script>
+        <!-- Syntax highlighting brushes, remove those you don't need -->
+        <script type="text/javascript" src="highlighter/shBrushBash.js"></script>
+        <script type="text/javascript" src="highlighter/shBrushCpp.js"></script>
+        <script type="text/javascript" src="highlighter/shBrushCSharp.js"></script>
+        <script type="text/javascript" src="highlighter/shBrushCss.js"></script>
+        <script type="text/javascript" src="highlighter/shBrushDelphi.js"></script>
+        <script type="text/javascript" src="highlighter/shBrushDiff.js"></script>
+        <script type="text/javascript" src="highlighter/shBrushGroovy.js"></script>
+        <script type="text/javascript" src="highlighter/shBrushJava.js"></script>
+        <script type="text/javascript" src="highlighter/shBrushJScript.js"></script>
+        <script type="text/javascript" src="highlighter/shBrushPhp.js"></script>
+        <script type="text/javascript" src="highlighter/shBrushPlain.js"></script>
+        <script type="text/javascript" src="highlighter/shBrushPython.js"></script>
+        <script type="text/javascript" src="highlighter/shBrushRuby.js"></script>
+        <script type="text/javascript" src="highlighter/shBrushScala.js"></script>
+        <script type="text/javascript" src="highlighter/shBrushSql.js"></script>
+        <script type="text/javascript" src="highlighter/shBrushVb.js"></script>
+        <script type="text/javascript" src="highlighter/shBrushXml.js"></script>
+        <!-- Syntax highlighting styles-->
+        <link type="text/css" rel="stylesheet" href="highlighter/shCore.css"/>
+        <link type="text/css" rel="stylesheet" href="highlighter/shThemeMidnight.css"/>
+        <!-- Slippy init code -->
+        <script type="text/javascript">
+            $(function() {
+                SyntaxHighlighter.all();
+                $(".slide").slippy({
+                    animLen: 0
+                });
+            });
+        </script>
+        <style type="text/css">
+            body {
+                background: #fff;
+                background-color:#ffffff;
+                background-image: -moz-radial-gradient(50% 50%, ellipse closest-side, #ffffff, #ccc 100%);
+                background-image: -webkit-radial-gradient(50% 50%, ellipse closest-side, #ffffff, #ccc 100%);
+                background-image: -o-radial-gradient(50% 50%, ellipse closest-side, #ffffff, #ccc 100%);
+                background-image: -ms-radial-gradient(50% 50%, ellipse closest-side, #ffffff, #ccc 100%);
+                background-image: radial-gradient(50% 50%, ellipse closest-side, #ffffff, #ccc 100%);
+            }
+            div.syntaxhighlighter {
+                background: #aaa !important;
+            }
+            .alertWrapper {
+                top: 5%;
+                bottom: auto;
+            }
+            .footer {
+                margin-bottom: 0px;
+            }
+            #background, body.slide-1 .slideDisplay {
+                display: none;
+            }
+            .slideDisplay {
+                color: #666;
+            }
+            a, a:link {
+                text-decoration: none;
+            }
+            h1 {
+                line-height: 130%;
+            }
+            ul li {
+                line-height: 130%;
+            }
+            p {
+                margin-bottom: .7em;
+            }
+            .center {
+                text-align: center;
+            }
+            .slide em {
+                color: #b00;
+            }
+            .slide.showtime:after {
+                content: "Showtime";
+                display: block;
+                text-align: center;
+                position: relative;
+                bottom: 3em;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="slide big">
+            <div class="vcenter">
+                <h1>10 <em>advanced</em>, yet digestible <em><br />SSH techniques</em></h1>
+            </div>
+        </div>
+
+        <div class="slide big">
+            <h1>About Me</h1>
+
+<hr>
+<center>
+            <p>&nbsp;</p>
+            <p>Senior Developer @ Net-Results Marketing Automation<br /> &nbsp;<a href="http://net-results.com">http://net-results.com</a><br /> &nbsp;</p>
+            <p>Golden / Lakewood<br /> &nbsp;</p>
+</center>
+        </div>
+
+        <!-- ================================
+             Refresher
+             ================================  -->
+
+        <div class="slide big">
+            <div class="vcenter">
+                <h1><em>Public</em> & <em>Private</em> Key Refresher</h1>
+            </div>
+        </div>
+
+        <div class="slide big">
+            <div class="">
+                <h1><em>(Refresher)</em><br> Generate Your Keys</h1>
+                <hr>
+                <p>Create an RSA key including a good pass-phrase</p>
+                <pre class="brush: bash">
+                ssh-keygen -t rsa \
+                  -C "{USER}@{APP} ({ENV})" \
+                  -f ~/.ssh/app-user-env.rsa
+                </pre>
+
+                <hr>
+                <p>Key comments are good</p>
+                <pre class="brush: bash">
+                ssh-keygen -t rsa \
+                  -C "deploy@uworkremote (ci)" \
+                  -f ~/.ssh/uworkremote-deploy-ci.rsa
+                </pre>
+            </div>
+        </div>
+
+        <div class="slide big">
+            <div class="">
+                <h1><em>(Refresher)</em><br> Public & Private Keys</h1>
+                <hr>
+                <p>Private Key (never share this)</p>
+                <pre class="brush: bash">
+                ~/.ssh/uworkremote-deploy-ci.rsa
+                </pre>
+
+                <hr>
+                <p>Public Key (share with trusted remote hosts)</p>
+                <pre class="brush: bash">
+                ~/.ssh/uworkremote-deploy-ci.rsa.pub
+                </pre>
+            </div>
+        </div>
+
+        <div class="slide big">
+            <div class="">
+                <h1>Windows <em>&hearts;</em>s Puttygen</h1>
+                <p style="margin-left: 80px"><img src="images/puttygen.gif"/></p>
+            </div>
+        </div>
+
+        <div class="slide big">
+            <div class="">
+                <h1>Github <em>&hearts;</em>s Keys <em>(copy+paste)</em></h1>
+                <hr>
+                <pre class="brush: bash">
+                cat uworkremote-deploy-ci.rsa.pub \
+                  | pbcopy
+                </pre>
+
+                <hr>
+                <p><a href="https://github.com/settings/ssh">github.com/settings/ssh</a></p>
+                <img src="images/github-add-sshkey.png" />
+            </div>
+        </div>
+
+        <div class="slide big">
+            <div class="">
+                <h1>Github API <em>Oauth2</em> Provider</h1>
+                <hr>
+                <pre class="brush: bash">
+                % curl -i 
+                  -H "Authorization: token ${token}" \
+                  -d '{"title": "${key-name}", \
+                       "key"  : "ssh-rsa ..."}' \
+                  https://api.github.com/user/keys
+                </pre>
+                <p><img src="images/github-user-keys.png"/></p>
+            </div>
+        </div>
+
+        <div class="slide big">
+            <div class="">
+                <h1>Set it and forget it</h1>
+                <hr>
+                <pre class="brush: bash">
+                % ssh-add -K \
+                  $HOME/.ssh/uworkremote-deploy-ci.rsa
+                </pre>
+
+                <img src="images/sshagent-keychain.png" />
+
+                <pre class="brush: bash">
+                % ssh -i deploy@192.168.56.101 -p 3333 \
+                  $HOME/.ssh/uworkremote-deploy-ci.rsa
+                </pre>
+            </div>
+        </div>
+
+        <!-- ================================
+             (01) 
+             ================================  -->
+
+        <div class="slide big">
+          <h1 class="vcenter">
+            <em>-- (01) --</em>
+            <p>Multiple Single-Use Keys</p>
+          </h1>
+        </div>
+
+        <div class="slide big">
+            <div class="">
+                <h1>Multiple <em>Single-Use Keys</em></h1>
+                <hr>
+                <p>Add one-or-more 'Host' blocks in <em>~/.ssh/config</em>:</p>
+                <pre class="brush: bash">
+                % $EDITOR $HOME/.ssh/config
+
+                Host some-remote-host
+                  Hostname     192.168.56.101
+                  User         deploy
+                  Port         3333
+                  IdentityFile ~/.ssh/{keyname}.rsa
+                </pre>
+
+                <p>You'll <em>&hearts;</em> doing this:</p>
+                <pre class="brush: bash">
+                % ssh some-remote-host
+                </pre>
+            </div>
+        </div>
+
+        <!-- ================================
+             (02) 
+             ================================  -->
+
+        <div class="slide big">
+          <h1 class="vcenter">
+            <em>-- (02) --</em>
+            <p>Remove <em>stale known_hosts</em> entries</p>
+          </h1>
+        </div>
+
+        <div class="slide big">
+            <div class="">
+                <h1>Remove <em>stale host</em> entries</h1>
+                <hr>
+                <img src="images/ssh-dns-spoof.png" />
+
+                <hr>
+                <h2>No <em>sed, awk, grep</em> tricks</h2>
+                <pre class="brush: bash">
+                % ssh-keygen -R 192.168.56.101
+                </pre>
+            </div>
+        </div>
+
+        <!-- ================================
+             (03) 
+             ================================  -->
+
+        <div class="slide big">
+          <h1 class="vcenter">
+            <em>-- (03) --</em>
+            <p>Hostname <em>Auto-Completion</em></p>
+          </h1>
+        </div>
+
+        <div class="slide big">
+            <div class="">
+                <h1><em>Auto-Completion</em> Hostnames</h1>
+                <hr>
+                <p>Type a few characters...press tab</p>
+                <pre class="brush: bash">
+                % ssh ec2
+                </pre>
+
+                <hr>
+                <p>List filtered based on input before pressing &lt;TAB&gt;</p>
+                <pre class="brush: bash">
+                ec2-184-72-73-71.compute-1.amazonaws.com
+                ec2-184-72-73-72.compute-1.amazonaws.com
+                ec2-184-72-73-73.compute-1.amazonaws.com
+                </pre>
+            </div>
+        </div>
+
+        <div class="slide big">
+            <div class="">
+                <h1><em>Auto-Completion</em> Remote Filenames</h1>
+                <hr>
+                <p>Type a path prefix...&lt;tab&gt;</p>
+                <pre class="brush: bash">
+                % scp . devwork:/usr/local/k
+                </pre>
+
+                <hr>
+                <p>The `kestrel` directory is expanded...&lt;tab&gt; again</p>
+                <pre class="brush: bash">
+                % scp . devwork:/usr/local/kestrel/
+                </pre>
+
+                <hr>
+                <p>Directory contents are expanded</p>
+                <pre class="brush: bash">
+                /usr/local/kestrel/config/
+                /usr/local/kestrel/scripts/
+                /usr/local/kestrel/kestrel-2.1.4.jar
+                /usr/local/kestrel/libs/
+                </pre>
+            </div>
+        </div>
+
+        <div class="slide big">
+            <div class="">
+                <h1>Is <em>Bash Completion</em> Installed?</h1>
+                <hr>
+                <p>You probably already have it installed</p>
+                <pre class="brush: bash">
+                % complete | grep [s]sh
+                </pre>
+
+                <pre class="brush: bash">
+                complete -F _ssh ssh
+                complete -F _ssh_copy_id ssh-copy-id
+                complete -o nospace -F _sshfs sshfs
+                complete -F _known_hosts ssh-installkeys
+                complete -F _ssh autossh
+                complete -F _ssh slogin
+                </pre>
+
+                <hr>
+                <p>If not, install it (if you have ZSH, skip this)</p>
+                <pre class="brush: bash">
+                ${YOUR_PACKAGER} install bash-completion
+                </pre>
+            </div>
+        </div>
+
+        <div class="slide big">
+            <div class="">
+                <h1>Use the script Luke...</h1>
+                <hr>
+                <p>Source it in</p>
+                <pre class="brush: bash">
+                % source /opt/local/etc/bash_completion
+                </pre>
+
+                <p>The homebrew version</p>
+                <pre class="brush: bash">
+                % source \
+                  $(brew --prefix)/etc/bash_completion
+                </pre>
+            </div>
+        </div>
+
+        <!-- ================================
+             (04) 
+             ================================  -->
+
+        <div class="slide big">
+          <h1 class="vcenter">
+            <em>-- (04) --</em>
+            <p>SSHFS</p>
+          </h1>
+        </div>
+
+        <div class="slide big">
+            <div class="">
+                <h1><em>Mount</em> remote directory over SSH</h1>
+                <hr>
+                <p>Mount</p>
+                <pre class="brush: bash">
+                % mkdir -p /tmp/devwww
+                % sshfs devwork:/var/www /tmp/devwww \
+                  -oreconnect,allow_other,volname=devwww
+                </pre>
+
+                <hr>
+                <p>Unmount</p>
+                <pre class="brush: bash">
+                % umount /tmp/devwww
+                </pre>
+            </div>
+        </div>
+
+        <!-- ================================
+             (05) 
+             ================================  -->
+
+        <div class="slide big">
+          <h1 class="vcenter">
+            <em>-- (05) --</em>
+            <p>Remote Commands</p>
+          </h1>
+        </div>
+
+        <div class="slide big">
+            <div class="">
+                <h1><em>Running</em> remote commands</h1>
+                <hr>
+                <p>Tailing a remote logfile</p>
+                <pre class="brush: bash">
+                % ssh -t devwork \
+                  'tail -f /var/log/daemon.log'
+                </pre>
+
+                <img src="images/remote-tail-log.png" />
+            </div>
+        </div>
+
+        <!-- ================================
+             (06) 
+             ================================  -->
+
+        <div class="slide big">
+          <h1 class="vcenter">
+            <em>-- (06) --</em>
+            <p>Access Remote Resources Locally</p>
+          </h1>
+        </div>
+
+        <div class="slide big">
+            <div class="">
+                <h1>Access our remote MongoDB instance as if local</h1>
+                <hr>
+                <p></p>
+                <pre class="brush: bash">
+                % ssh -NCL 27017:127.0.0.1:27017 devwork
+                </pre>
+
+                <img src="images/remote-tunnel-mongodb.png" />
+            </div>
+        </div>
+
+        <!-- ================================
+             (07) 
+             ================================  -->
+
+        <div class="slide big">
+          <h1 class="vcenter">
+            <em>-- (07) --</em>
+            <p>Named Remote Screen Sessions</p>
+          </h1>
+        </div>
+
+        <div class="slide big">
+            <div class="">
+                <h1>Access a named screen session remotely</h1>
+                <hr>
+                <p>Create or continue an admin session</p>
+                <pre class="brush: bash">
+                % ssh -t devwork 'screen -xRRS admin-mongo'
+                </pre>
+
+                <img src="images/remote-tunnel-mongodb.png" />
+            </div>
+        </div>
+
+        <!-- ================================
+             (08) 
+             ================================  -->
+
+        <!-- ================================
+             (09) 
+             ================================  -->
+
+        <!-- ================================
+             (10) 
+             ================================  -->
+
+        <!-- ================================
+             FIN
+             ================================  -->
+
+        <div class="slide big">
+            <div class="">
+                <h1><em>(Refresher)</em><br> Change the locks periodically</h1>
+                <hr>
+                <pre class="brush: bash">
+                % ssh-keygen -p -f \
+                  $HOME/.ssh/uworkremote-deploy-ci.rsa
+
+                Enter old passphrase: 
+                Enter new passphrase: 
+                Enter same passphrase again: 
+
+                Your new passphrase has been saved...
+                </pre>
+            </div>
+        </div>
+
+
+        <div class="slide big">
+          <h1>Change Sets</h1>
+
+<hr>
+<p><em>Do in code what you'd normally do manually</em></p>
+          <ul>
+            <li class="">CREATE TABLE</li>
+            <li class="">ALTER TABLE</li>
+            <li class="">ADD CONSTRAINT</li>
+            <li class="">DROP COLUMN</li>
+            <li class="">INSERT INTO TABLE</li>
+            <li class="">SPROCS</li>
+            <li class="">TRIGGERS</li>
+            <li class="">VIEWS</li>
+            <li class="">UDF DEFINITIONS</li>
+          </ul>
+        </div>
+
+        <div class="slide big">
+          <h1 class="vcenter"><em>Many Options</em> Available</h1>
+        </div>
+
+        <div class="slide big">
+          <div>
+            <h1>RAILS <em>Active Record</em> Migrations</h1>
+          </div>
+
+          <hr>
+          <h2>PROS:</h2>
+          <hr>
+          <ul>
+            <li>Clean DSL Syntax</li>
+            <li>Excellent Documentation</li>
+            <li>Very Well Supported</li>
+          </ul>
+
+          <hr>
+          <h2>CONS:</h2>
+          <hr>
+          <ul>
+            <li>Depends on RAILS environment</li>
+            <li>Assumes Active Record Pattern</li>
+          </ul>
+        </div>
+
+        <div class="slide big">
+          <div>
+            <h1><em>Active Record</em> Standalone Migrations</h1>
+          </div>
+
+          <hr>
+          <h2>PROS:</h2>
+          <hr>
+          <ul>
+            <li>Same as RAILS-specific Migrations</li>
+            <li>+ DOES NOT NEED RAILS, just <em>RUBY</em></li>
+          </ul>
+
+          <hr>
+          <h2>CONS:</h2>
+          <hr>
+          <ul>
+            <li><em>NEEDS</em> RUBY if you don't already have it</li>
+          </ul>
+        </div>
+
+        <div class="slide big">
+          <div>
+            <h1>DOCTRINE2 <em>Migrations</em></h1>
+          </div>
+
+          <hr>
+          <h2>PROS:</h2>
+          <hr>
+          <ul>
+            <li>Excellent Database Support</li>
+            <li>DOCTRINE2 is well documented</li>
+            <li>DOCTRINE2 is quality software</li>
+          </ul>
+
+          <hr>
+          <h2>CONS:</h2>
+          <hr>
+          <ul>
+            <li>NEEDS PHP 5.3 if you don't already have it</li>
+            <li>Relatively simplistic</li>
+          </ul>
+        </div>
+
+        <div class="slide big">
+          <div>
+            <h1>DBDeploy</h1>
+          </div>
+
+          <hr>
+          <h2>PROS:</h2>
+          <hr>
+          <ul>
+            <li>Available for PHP</li>
+            <li>Available for JAVA</li>
+            <li>Available for .NET</li>
+          </ul>
+
+          <hr>
+          <h2>CONS:</h2>
+          <hr>
+          <ul>
+            <li>Not as feature-full as Liquibase</li>
+            <li>Relatively simplistic</li>
+          </ul>
+        </div>
+
+        <div class="slide big">
+          <div>
+            <h1><em>South</em></h1>
+          </div>
+
+          <hr>
+          <h2>PROS:</h2>
+          <hr>
+          <ul>
+            <li>Excellent choice if you are using <em>Django</em></li>
+          </ul>
+
+          <hr>
+          <h2>CONS:</h2>
+          <hr>
+          <ul>
+            <li>NEEDS <em>Python/Django</em> if you don't already have it</li>
+          </ul>
+        </div>
+
+        <div class="slide big">
+          <div>
+            <h1>Liquibase<em> [&#10003;]</em></h1>
+          </div>
+
+          <hr>
+          <h2>PROS:</h2>
+          <hr>
+          <ul>
+            <li>You likely have the <em>JVM</em> installed</li>
+            <li><em>Cross-platform</em> (xcopy-able) single Jar</li>
+            <li>Store with project (<em>checkout and go</em>)</li>
+            <li>DSL or <em>RAW</em> SQL syntax</li>
+            <li>Excellent database support through <em>JDBC</em></li>
+            <li>Generates <em> SQL diffs</em></li>
+            <li>Separate changelogs into <em>multiple files</em></li>
+            <li>Generates <em>HTML data dictionary</em></li>
+            <li>Groovy DSL plugin available (NO XML)</li>
+          </ul>
+        </div>
+
+        <div class="slide big">
+          <div>
+            <h1>Liquibase<em> [&#10003;]</em></h1>
+          </div>
+
+          <hr>
+          <h2>CONS:</h2>
+          <hr>
+          <ul>
+            <li><em>XML</em> syntax by default</li>
+            <li>Won't help you if you are dealing with <em>topic branches</em> that deviate</li>
+            <li><em>65</em> Character <em>limit</em> on change-set ID</li>
+          </ul>
+        </div>
+
+        <div class="slide big">
+            <div class="">
+              <h1>Liquibase Tool <em>Support</em>?</h1>
+              <ul>
+                <li>Command line</li>
+                <li><em>Eclipse</em></li>
+                <li>IntelliJ IDEA</li>
+                <li><em>ANT</em></li>
+                <li>Grails</li>
+                <li><em>Maven</em></li>
+                <li>VIM (fg or !)</li>
+              </ul>
+            </div>
+        </div>
+
+        <!-- ================================
+             Installation
+             ================================  -->
+
+        <div class="slide big">
+            <div class="">
+                <h1>Project Setup</h1>
+                <pre class="brush: bash">
+                mkdir openschema
+                cd !$
+                git init
+                </pre>
+            </div>
+        </div>
+
+        <div class="slide big">
+            <div class="">
+                <h1>Pull <em>Liquibase Jar</em> into Project</h1>
+                <pre class="brush: bash">
+                mkdir -p bin src/data/changelog
+
+                curl -# -L \
+                  http://git.io/9uGg1Q | tar -xz -C bin
+
+                curl -# -L \
+                  http://goo.gl/W2SMg  | \
+                  tar -xz --strip 1 -C bin/
+                </pre>
+            </div>
+        </div>
+
+        <div class="slide">
+            <div class="">
+                <h1>Liquibase <em>Bash Script</em></h1>
+                <pre class="brush: bash">
+                cat > bin/liquibase &lt;&lt;EOF
+                #!/usr/bin/env bash
+                LB_CLASS_PATH=\$(dirname \$0)/liquibase.jar:\$(dirname \$0)/mysql-connector-java-5.1.18-bin.jar
+                LIQUIBASE_CMD=liquibase.integration.commandline.Main
+                java -cp \${LB_CLASS_PATH} \${LIQUIBASE_CMD} \\
+                  --driver="com.mysql.jdbc.Driver" \\
+                  --url="jdbc:mysql://localhost/openschema" \\
+                  --username=root \\
+                  --password=rootpass \\
+                  --changeLogFile=src/data/changelog/openschema.changelog.xml \\
+                "\$@"
+                EOF
+                </pre>
+            </div>
+        </div>
+
+        <div class="slide big">
+            <div class="">
+                <h1>Project Setup</h1>
+                <pre class="brush: bash">
+chmod +x bin/liquibase
+export PATH=./bin:$PATH
+</pre>
+
+                <pre class="brush: bash">
+git add . && git commit -am 'project-specific liquibase install'
+                </pre>
+
+            </div>
+        </div>
+
+        <div class="slide big">
+            <div class="vcenter">
+                <h1>More JDBC drivers</h1>
+                <h1><a href="http://www.sql-workbench.net/manual/jdbc-setup.html">@ sql-workbench.net</a></h1>
+
+            </div>
+        </div>
+
+        <div class="slide ">
+            <div class="">
+                <h1>Initialize Schema</h1>
+                <pre class="brush: sql">
+    -- delete schema (NOTE: in MySQL "schema" == "database")
+    DROP SCHEMA IF EXISTS `openschema`;
+
+    -- create initial schema
+    CREATE SCHEMA IF NOT EXISTS `openschema`
+        DEFAULT CHARACTER SET = utf8
+        DEFAULT COLLATE       = utf8_unicode_ci;
+                </pre>
+            </div>
+        </div>
+
+        <div class="slide ">
+            <div class="">
+                <h1>Create a Changelog File</h1>
+<pre class="brush: xml">
+cat > src/data/changelog/openschema.changelog.xml &lt;&lt;EOF
+&lt;?xml version="1.0" encoding="UTF-8"?>
+&lt;databaseChangeLog
+  xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+  http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-2.0.xsd">
+&lt;/databaseChangeLog>
+EOF
+</pre>
+            </div>
+        </div>
+
+        <div class="slide big">
+            <div class="">
+                <h1>Update Database</h1>
+<pre class="brush: xml">
+% liquibase update
+</pre>
+<pre class="brush: xml">
+Successfully acquired change log lock
+Reading from `DATABASECHANGELOG`
+Reading from `DATABASECHANGELOG`
+Successfully released change log lock
+
+Liquibase Update Successful
+</pre>
+            </div>
+        </div>
+
+        <!-- ================================
+             Tracking Tables
+             ================================  -->
+
+        <div class="slide big">
+            <div class="vcenter">
+              <h1>The first successful run will create two tracking tables</h1>
+              <pre class="brush: bash">
+              mysql> show tables from openschema;
+              </pre>
+              <pre class="brush: bash">
+              +-----------------------+
+              | Tables_in_openschema  |
+              +-----------------------+
+              | DATABASECHANGELOG     |
+              | DATABASECHANGELOGLOCK |
+              +-----------------------+
+              </pre>
+            </div>
+        </div>
+
+        <!-- ================================
+             Creating Changesets
+             ================================  -->
+
+        <div class="slide big">
+            <div class="vcenter">
+              <h1>datestamp to use in the changeset</h1>
+              <pre class="brush: ruby">
+              echo $(date +%Y%m%d-%H%M) | pbcopy
+              </pre>
+
+              <h1>Edit "openschema.changelog.xml"</h1>
+              <pre class="brush: ruby">
+              $EDITOR src/data/changelog/openschema.changelog.xml
+              </pre>
+            </div>
+        </div>
+
+        <div class="slide ">
+            <div class="vcenter">
+              <h1>Party Table Changeset</h1>
+              <pre class="brush: ruby">
+                <changeSet id="20111117-0831__create_party" author="wilmoore">
+                    <comment>create the party table</comment>
+                    <createTable tableName="party">
+                        <column name="partyId" type="SERIAL" autoIncrement="true">
+                            <constraints primaryKey="true" nullable="false" />
+                        </column>
+                    </createTable>
+                </changeSet>
+              </pre>
+                  <pre class="brush: xml">
+                  % liquibase update
+                  </pre>
+            </div>
+        </div>
+
+        <div class="slide ">
+            <div class="vcenter">
+              <h1>Organization Table Changeset</h1>
+              <pre class="brush: xml">
+    <changeSet id="20111117-0832__create_organization" author="wilmoore">
+        <comment>create the organization table</comment>
+
+        <createTable tableName="organization">
+            <column name="partyId" type="BIGINT UNSIGNED">
+                <constraints nullable="false" />
+            </column>
+        </createTable>
+
+        <addForeignKeyConstraint
+            constraintName="fk___organization_partyId__party__partyId"
+            baseTableName="organization"
+            baseColumnNames="partyId"
+            referencedTableName="party"
+            referencedColumnNames="partyId"
+        />
+    </changeSet>
+              </pre>
+                  <pre class="brush: xml">
+                  % liquibase update
+                  </pre>
+            </div>
+        </div>
+
+        <div class="slide ">
+            <div class="vcenter">
+              <h1>Seed data w/ <em>Context</em></h1>
+              <pre class="brush: xml">
+    <changeSet id="20111117-0832__seed-party-organization" context="seed" author="wilmoore">
+        <sql>
+        -- seed party and organization tables
+        INSERT INTO `party` (`partyId`) VALUES (1);
+        INSERT INTO `organization` (`partyId`) VALUES (1);
+        </sql>
+    </changeSet>
+              </pre>
+                  <pre class="brush: xml">
+                  % liquibase update
+                  </pre>
+            </div>
+        </div>
+
+        <div class="slide ">
+            <div class="vcenter">
+              <h1>Person Table Changeset</h1>
+              <pre class="brush: xml">
+    <changeSet id="20111117-0835__create_person" author="wilmoore">
+        <comment>create the person table</comment>
+
+        <sql>
+        CREATE TABLE IF NOT EXISTS `person` (
+        `partyId`   BIGINT(20) UNSIGNED NOT NULL,
+
+        KEY `fk___person_partyId__party__partyId` (`partyId`),
+        CONSTRAINT `fk___person_partyId__party__partyId`
+            FOREIGN KEY (`partyId`)
+            REFERENCES `party` (`partyId`)
+        ) ENGINE=INNODB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
+        </sql>
+
+        <rollback>
+            <sql>DROP TABLE `person`;</sql>
+        </rollback>
+    </changeSet>
+              </pre>
+                  <pre class="brush: xml">
+                  % liquibase update
+                  </pre>
+            </div>
+        </div>
+
+        <div class="slide big">
+            <div class="">
+                <h1>Update Database Directly</h1>
+                  <pre class="brush: xml">
+                  % liquibase update
+                  </pre>
+                  <pre class="brush: xml">
+                  Successfully acquired change log lock
+                  Reading from `DATABASECHANGELOG`
+                  Reading from `DATABASECHANGELOG`
+                  Successfully released change log lock
+
+                  Liquibase Update Successful
+                  </pre>
+            </div>
+        </div>
+
+        <div class="slide ">
+            <div class="">
+                <h1>Generate SQL Diff Script</h1>
+                  <pre class="brush: xml">
+                  % liquibase updateSql
+                  </pre>
+                  <pre class="brush: sql">
+-- Lock Database
+-- Changeset ...::(Checksum: 3:6c88f5b291611c32dce094fe6cbe5716)
+-- create the person table
+CREATE TABLE IF NOT EXISTS `person` (
+  `partyId`   BIGINT(20) UNSIGNED NOT NULL,
+
+  KEY `fk___person_partyId__party__partyId` (`partyId`),
+  CONSTRAINT `fk___person_partyId__party__partyId`
+      FOREIGN KEY (`partyId`)
+      REFERENCES `party` (`partyId`)
+) ENGINE=INNODB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
+
+INSERT INTO `DATABASECHANGELOG` (`AUTHOR`, `COMMENTS`, `DATEEXECUTED`, `DESCRIPTION`, `EXECTYPE`, `FILENAME`, `ID`, `LIQUIBASE`, `MD5SUM`, `ORDEREXECUTED`)
+VALUES (...);
+                  </pre>
+            </div>
+        </div>
+
+        <div class="slide ">
+            <div class="">
+                <h1>Drop Everything</h1>
+                  <pre class="brush: xml">
+drop table openschema.people;
+drop table openschema.organization;
+drop table openschema.party;
+drop table openschema.DATABASECHANGELOG;
+drop table openschema.DATABASECHANGELOGLOCK;
+                  </pre>
+                  <pre class="brush: xml">
+liquibase update
+                  </pre>
+
+            </div>
+        </div>
+
+        <div class="slide big">
+            <div class="">
+                <h1>Rollback</h1>
+                <hr>
+                <p>back to the state it was in when the tag was applied</p>
+                <pre class="brush: bash">
+                rollback &lt;tag&gt;
+                </pre>
+
+                <hr>
+                <p>back to the state it was in at the given date/time</p>
+                <pre class="brush: bash">
+                rollbackToDate &lt;date/time&gt;
+                </pre>
+
+                <hr>
+                <p>Rolls back the last change sets</p>
+                <pre class="brush: bash">
+                rollbackCount &lt;value&gt;
+                </pre>
+            </div>
+        </div>
+
+        <div class="slide big">
+            <div class="">
+                <h1>Rollback Documentation</h1>
+<ul>
+<li><a href="http://www.liquibase.org/manual/rollback">Rolling Back ChangeSets</a></li>
+<li><a href="http://www.liquibase.org/manual/command_line">Commandline Options</a></li>
+</ul>
+            </div>
+        </div>
+
+        <!-- ================================
+             Closing
+             ================================  -->
+
+        <div class="slide big">
+          <div class="vcenter">
+            <h1>Hate XML?</h1>
+            <hr>
+            <h1><em>Groovy DSL</em> by Tim Burglund</h1>
+            <a href="https://github.com/tlberglund/groovy-liquibase">https://github.com/tlberglund/groovy-liquibase</a>
+          </div>
+        </div>
+
+         <div class="slide big">
+          <h1 class="center">XML file getting too large?</h1>
+          <hr>
+          <h2>Break up your files using &lt;include&gt; tag</h2>
+
+          <pre class="brush: xml">
+    &lt;include file="schema/schema-webservices.xml"
+             relativeToChangelogFile="inc" /&gt;
+    &lt;include file="sample/sample-users.xml"
+             relativeToChangelogFile="inc" /&gt;
+          </pre>
+         </div>
+
+        <div class="slide big">
+          <div class="">
+            <h1>instead of <em>"relativeToChangelogFile"</em>:</h1>
+            <ul>
+              <li>Set a custom property</li>
+              <li>In "file=" use ${custom-property}</li>
+            </ul>
+
+            <pre class="brush: xml">
+              &lt;include file="${custom.prefix}/schema/schema-webservices.xml" />
+            </pre>
+            <a href="http://www.liquibase.org/manual/include">Documentation for &lt;include&gt; tag</a>
+         </div>
+       </div>
+
+        <div class="slide big">
+            <div class="vcenter">
+                <h1>References &amp; Links</h1>
+                <ul>
+                    <li href="http://www.quora.com/What-are-the-alternatives-to-LiquiBase"><a>What are the alternatives to LiquiBase?</a></li>
+                    <li><a href="https://github.com/thuss/standalone-migrations">Active Record Standalone Migrations</a></li>
+                    <li><a href="http://www.build-doctor.com/2010/01/17/dbdeploy-net/">DBDeploy Article listing of alternatives</a></li>
+                    <li><a href="http://techportal.ibuildings.com/2011/01/11/database-version-control/">Database Version Control</a></li>
+                    <li><a href="http://www.liquibase.org/quickstart">Liquibase Quickstart</a></li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="slide big">
+            <div class="vcenter">
+                <h1><em>Talk</em> to me <a href="http://twitter.com/wilmoore">@wilmoore</a>:</h1>
+                <h1>or <a href="mailto:wil.moore@wilmoore.com">wil.moore@wilmoore.com</a></h1>
+                <hr>
+
+                <h1>Get the <em>slides</em> @: <a href="https://joind.in/6108">https://joind.in/6108</a></h1>
+            </div>
+        </div>
+
+        <div class="layout" data-name="default">
+            <content></content>
+        </div>
+
+        <div class="footer">
+            <span class="left">Wil Moore III</span>
+            <span class="right">Company <a href="http://net-results.com/">Net-Results Marketing Automation</a></span>
+            <span class="left">Twitter <a href="http://twitter.com/wilmoore">@wilmoore</a></span>
+            <span class="right">Blog <a href="http://blog.net-results.com/">blog.net-results.com</a></span>
+            <hr class="defloat" />
+        </div>
+    </body>
+</html>
+
